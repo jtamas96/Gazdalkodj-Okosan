@@ -1,0 +1,1 @@
+# Gazdalkojd-Okosan
