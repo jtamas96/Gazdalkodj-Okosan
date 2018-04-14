@@ -19,7 +19,7 @@ public class Room {
         this.name = name;
     }
 
-    public static RoomStringConverter getStringConverter(){
+    public static RoomStringConverter getStringConverter() {
         return new RoomStringConverter();
     }
 

@@ -10,6 +10,7 @@ import javafx.stage.Stage;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
+
 import java.net.URL;
 
 @SpringBootApplication
@@ -45,6 +46,6 @@ public class GazdalkodjOkosanApplication extends Application {
     }
 
     public static void main(String[] args) {
-		launch(args);
-	}
+        launch(args);
+    }
 }
