@@ -6,9 +6,9 @@ package hu.elte.gazdalkodjokosan.model;
  * and open the template in the editor.
  */
 import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNumberException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+
+import java.util.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -19,15 +19,20 @@ public class GameModel {
     private List<Player> players;
     private List<Field> table;
     private Player currentPlayer;
+    private Map<Player, List<SaleItem>> itemsMap;
 
     @Autowired
     private ApplicationEventPublisher publisher;
 
     public void newGame(int playerNumber) throws PlayerNumberException {
-        if (playerNumber >= 2 || playerNumber <= 6) {
+        if (playerNumber >= 2 && playerNumber <= 6) {
             players = new ArrayList<>();
+            itemsMap = new HashMap<>();
+
             for (int i = 0; i < playerNumber; i++) {
-                players.add(new Player(3000000, 238000, 0, 0, i));
+                Player p = new Player(3000000, 238000, 0, 0, i);
+                players.add(p);
+                itemsMap.put(p, SaleItem.getInitialListForUser());
             }
             currentPlayer = players.get(0);
             table = new ArrayList<>();
