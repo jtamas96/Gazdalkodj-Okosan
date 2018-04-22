@@ -17,8 +17,6 @@ public interface BoardService {
     public PlayerColor getNewGame(int nrPlayers);
     // return the next player's color in the row
     public PlayerColor switchToNextPlayer(PlayerColor playerColor);
-    // move the player from its current place #nrSteps forward
-    public BoardResponse move(PlayerColor playerColor, int nrSteps);
     public PlayerStatus getPlayerStatus(PlayerColor playerColor);
     public BoardResponse buyCar(PlayerColor playerColor, boolean loan, boolean payWithCash);
     public BoardResponse buyHouse(PlayerColor playerColor, boolean loan, boolean payWithCash);
