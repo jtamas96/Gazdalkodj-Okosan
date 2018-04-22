@@ -5,13 +5,16 @@ package hu.elte.gazdalkodjokosan.model;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
+import hu.elte.gazdalkodjokosan.common.transfer.PlayerColor;
+import hu.elte.gazdalkodjokosan.model.enums.Item;
+import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNotFoundException;
 import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNumberException;
-
-import java.util.*;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
+
+import java.util.*;
 
 @Component
 public class GameModel {
@@ -30,7 +33,7 @@ public class GameModel {
             itemsMap = new HashMap<>();
 
             for (int i = 0; i < playerNumber; i++) {
-                Player p = new Player(3000000, 238000, 0, 0, i);
+                Player p = new Player(3000000, 238000, 0, 0, i, PlayerColor.values()[i]);
                 players.add(p);
                 itemsMap.put(p, SaleItem.getInitialListForUser());
             }
@@ -79,5 +82,34 @@ public class GameModel {
 
     public Player getCurrentPlayer() {
         return currentPlayer;
+    }
+
+    public boolean isGameOverForPlayer(PlayerColor playerColor) throws PlayerNotFoundException {
+        Player player = getPlayerByColor(playerColor);
+
+        List<SaleItem> items = getItemsOfUser(playerColor);
+
+        boolean hasAllMandatory = items.stream()
+                .filter(userItem -> Item.valueOf(userItem.name).getMandatory())
+                .allMatch(userItem -> userItem.purchased);
+        int allCash = player.getCash() + player.getDebt();
+        return hasAllMandatory && allCash >= 600000;
+    }
+
+    public List<SaleItem> getItemsOfUser(PlayerColor playerColor) throws PlayerNotFoundException {
+        Player player = getPlayerByColor(playerColor);
+        return itemsMap.getOrDefault(player, new ArrayList<>());
+    }
+
+    private Player getPlayerByColor(PlayerColor playerColor) throws PlayerNotFoundException {
+        Optional<Player> optPlayer = players.stream()
+                .filter(p -> p.getColor() == playerColor)
+                .findFirst();
+
+        if (optPlayer.isPresent()) {
+            return optPlayer.get();
+        } else {
+            throw new PlayerNotFoundException("Player not found with color: " + playerColor);
+        }
     }
 }

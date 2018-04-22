@@ -5,6 +5,8 @@
  */
 package hu.elte.gazdalkodjokosan.model;
 
+import hu.elte.gazdalkodjokosan.common.transfer.PlayerColor;
+
 public class Player {
 
     private int bankBalance;
@@ -12,13 +14,15 @@ public class Player {
     private int debt;
     private int position;
     private int index;
+    private PlayerColor color;
 
-    public Player(int bankBalance, int cash, int debt, int position, int index) {
+    public Player(int bankBalance, int cash, int debt, int position, int index, PlayerColor color) {
         this.bankBalance = bankBalance;
         this.cash = cash;
         this.debt = debt;
         this.position = position;
         this.index = index;
+        this.color = color;
     }
 
     public int getBankBalance() {
@@ -56,4 +60,6 @@ public class Player {
     public int getIndex() {
         return index;
     }
+
+    public PlayerColor getColor() {return color;}
 }

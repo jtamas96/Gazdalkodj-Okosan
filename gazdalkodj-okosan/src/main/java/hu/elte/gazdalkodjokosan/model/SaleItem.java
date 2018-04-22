@@ -5,25 +5,18 @@ import hu.elte.gazdalkodjokosan.model.enums.Item;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SaleItem {
-    private int cost;
-    private boolean creditable;
+public class SaleItem { // A mutable representation of Items for each user.
+
+    public String name;
     private boolean available = false;
     boolean purchased = false;
-    public Integer creditableTotalCost;
-    public Integer creditableStartCost;
-    public Integer annualCost;
 
     public SaleItem(Item item){
-        cost = item.getCost();
-        creditable = item.isCreditable();
-        creditableTotalCost = item.creditableTotalCost;
-        creditableStartCost = item.creditableStartCost;
-        annualCost = item.annualCost;
+        name = item.name();
     }
 
-    public int getCost() {
-        return cost;
+    public String getName() {
+        return name;
     }
 
     public boolean isAvailable() {
@@ -34,12 +27,11 @@ public class SaleItem {
         available = true;
     }
 
-    public boolean isCreditable() {
-        return creditable;
-    }
     public void purchase() {
         purchased = true;
     }
+
+    public boolean isPurchased() { return purchased;}
 
     public static List<SaleItem> getInitialListForUser(){
         List<SaleItem> result = new ArrayList<SaleItem>();

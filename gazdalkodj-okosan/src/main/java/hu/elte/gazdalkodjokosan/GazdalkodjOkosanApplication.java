@@ -23,7 +23,7 @@ public class GazdalkodjOkosanApplication extends Application {
         SpringApplicationBuilder builder = new SpringApplicationBuilder(GazdalkodjOkosanApplication.class);
         context = builder.run(getParameters().getRaw().toArray(new String[0]));
 
-        URL url = getClass().getResource("/table.fxml");
+        URL url = getClass().getResource("/fxml/Starter.fxml");
         FXMLLoader loader = new FXMLLoader(url);
         loader.setControllerFactory(context::getBean);
         rootNode = loader.load();
@@ -31,12 +31,12 @@ public class GazdalkodjOkosanApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Rectangle2D visualBounds = Screen.getPrimary().getVisualBounds();
-        double width = visualBounds.getWidth();
-        double height = visualBounds.getHeight();
+        double width = 230;
+        double height = 150;
 
         primaryStage.setScene(new Scene(rootNode, width, height));
         primaryStage.centerOnScreen();
+        primaryStage.setTitle("Gazdálkodj okosan");
         primaryStage.show();
     }
 
