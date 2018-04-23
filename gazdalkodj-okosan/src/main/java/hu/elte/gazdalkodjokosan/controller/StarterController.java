@@ -5,12 +5,11 @@
  */
 package hu.elte.gazdalkodjokosan.controller;
 
+import hu.elte.gazdalkodjokosan.model.ClientModel;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import hu.elte.gazdalkodjokosan.service.BoardService;
-import hu.elte.gazdalkodjokosan.service.DefaultBoardService;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -20,6 +19,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -30,28 +30,34 @@ import org.springframework.stereotype.Component;
 @Component
 public class StarterController implements Initializable {
 
-    BoardService boardService;
+    // BoardService boardService;
+    ClientModel clientModel;
     @FXML
     private ToggleGroup playerNum;
+
+    @Autowired
+    StarterController(ClientModel clientModel) {
+        this.clientModel = clientModel;
+    }
 
     /**
      * Initializes the controller class.
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        boardService = new DefaultBoardService();
         // TODO
-    }    
+    }
 
     @FXML
     private void startGamePressed(ActionEvent event) throws IOException {
+        clientModel.newGame(3);
         Parent parent = FXMLLoader.load(getClass().getResource("/fxml/GameBoard.fxml"));
         Scene scene = new Scene(parent);
-        
-        Stage window = (Stage) ((Node)event.getSource()).getScene().getWindow();
+
+        Stage window = (Stage) ((Node) event.getSource()).getScene().getWindow();
         window.setScene(scene);
         window.centerOnScreen();
         window.show();
     }
-    
+
 }

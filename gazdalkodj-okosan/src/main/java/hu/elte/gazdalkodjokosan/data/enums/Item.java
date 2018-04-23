@@ -1,4 +1,4 @@
-package hu.elte.gazdalkodjokosan.model.enums;
+package hu.elte.gazdalkodjokosan.data.enums;
 
 
 public enum Item {

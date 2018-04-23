@@ -1,21 +1,26 @@
 package hu.elte.gazdalkodjokosan.service;
 
 import hu.elte.gazdalkodjokosan.common.transfer.*;
-import hu.elte.gazdalkodjokosan.model.GameModel;
-import hu.elte.gazdalkodjokosan.model.Player;
-import hu.elte.gazdalkodjokosan.model.SaleItem;
-import hu.elte.gazdalkodjokosan.model.enums.Item;
+import hu.elte.gazdalkodjokosan.data.Field;
+import hu.elte.gazdalkodjokosan.service.model.GameModel;
+import hu.elte.gazdalkodjokosan.data.Player;
+import hu.elte.gazdalkodjokosan.data.SaleItem;
+import hu.elte.gazdalkodjokosan.data.enums.Item;
 import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNotFoundException;
 import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNumberException;
 
 import java.util.HashSet;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class DefaultBoardService implements BoardService {
     private GameModel model;
 
-    public DefaultBoardService() {
-        this.model = new GameModel();
+    @Autowired
+    public DefaultBoardService(GameModel model) {
+        this.model = model;
     }
 
     @Override
@@ -148,5 +153,10 @@ public class DefaultBoardService implements BoardService {
         }else{
             return new BoardResponse("Not Authorized for this!", false);
         }
+    }
+
+    @Override
+    public List<Field> getTable() {
+        return model.getTable();
     }
 }

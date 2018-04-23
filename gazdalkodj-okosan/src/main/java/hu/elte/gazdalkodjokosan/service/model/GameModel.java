@@ -1,13 +1,12 @@
-package hu.elte.gazdalkodjokosan.model;
+package hu.elte.gazdalkodjokosan.service.model;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 
+import hu.elte.gazdalkodjokosan.data.SaleItem;
+import hu.elte.gazdalkodjokosan.data.Player;
 import hu.elte.gazdalkodjokosan.common.transfer.PlayerColor;
-import hu.elte.gazdalkodjokosan.model.enums.Item;
+import hu.elte.gazdalkodjokosan.data.enums.Item;
+import hu.elte.gazdalkodjokosan.data.Field;
+import hu.elte.gazdalkodjokosan.model.GameSteppedEvent;
 import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNotFoundException;
 import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNumberException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,10 +21,13 @@ public class GameModel {
     private List<Player> players;
     private List<Field> table;
     private Player currentPlayer;
-    private Map<Player, List<SaleItem>> itemsMap;
-
-    @Autowired
+    private Map<Player, List<SaleItem>> itemsMap;  
     private ApplicationEventPublisher publisher;
+    
+    @Autowired
+    public GameModel(ApplicationEventPublisher publisher) {
+        this.publisher = publisher;
+    }
 
     public void newGame(int playerNumber) throws PlayerNumberException {
         if (playerNumber >= 2 && playerNumber <= 6) {
@@ -91,7 +93,7 @@ public class GameModel {
 
         boolean hasAllMandatory = items.stream()
                 .filter(userItem -> Item.valueOf(userItem.name).getMandatory())
-                .allMatch(userItem -> userItem.purchased);
+                .allMatch(userItem -> userItem.isPurchased());
         int allCash = player.getCash() + player.getDebt();
         return hasAllMandatory && allCash >= 600000;
     }

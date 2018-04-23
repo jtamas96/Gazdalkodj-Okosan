@@ -1,6 +1,6 @@
-package hu.elte.gazdalkodjokosan.model;
+package hu.elte.gazdalkodjokosan.data;
 
-import hu.elte.gazdalkodjokosan.model.enums.Item;
+import hu.elte.gazdalkodjokosan.data.enums.Item;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +34,7 @@ public class SaleItem { // A mutable representation of Items for each user.
     public boolean isPurchased() { return purchased;}
 
     public static List<SaleItem> getInitialListForUser(){
-        List<SaleItem> result = new ArrayList<SaleItem>();
+        List<SaleItem> result = new ArrayList<>();
         for(Item i: Item.values()){
             result.add(new SaleItem(i));
         }

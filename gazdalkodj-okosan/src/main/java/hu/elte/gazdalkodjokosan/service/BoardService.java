@@ -6,6 +6,8 @@
 package hu.elte.gazdalkodjokosan.service;
 
 import hu.elte.gazdalkodjokosan.common.transfer.*;
+import hu.elte.gazdalkodjokosan.data.Field;
+import java.util.List;
 
 /**
  *
@@ -24,4 +26,5 @@ public interface BoardService {
     public BoardResponse buyHouseAsset(PlayerColor playerColor, boolean payWithCash, HouseAsset houseAsset);
     public BoardResponse buyBKVPass(PlayerColor playerColor, boolean payWithCash);
     public BoardResponse transferMoney(PlayerColor playerColor, int amount);
+    public List<Field> getTable();
 }

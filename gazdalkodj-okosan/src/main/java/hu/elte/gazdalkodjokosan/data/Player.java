@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package hu.elte.gazdalkodjokosan.model;
+package hu.elte.gazdalkodjokosan.data;
 
 import hu.elte.gazdalkodjokosan.common.transfer.PlayerColor;
 
