@@ -9,13 +9,15 @@ package hu.elte.gazdalkodjokosan.common.transfer;
  *
  * @author sando
  */
-public class BoardResponse {
+public class BoardResponse<T> {
     private String errorMessage;
-    private boolean actionSuccessful; 
+    private boolean actionSuccessful;
+    private T value;
 
-    public BoardResponse(String errorMessage, boolean actionSuccessful) {
+    public BoardResponse(String errorMessage, boolean actionSuccessful, T val) {
         this.errorMessage = errorMessage;
         this.actionSuccessful = actionSuccessful;
+        this.value = val;
     }
     
     public String getErrorMessage() {
@@ -25,4 +27,9 @@ public class BoardResponse {
     public boolean isActionSuccessful() {
         return actionSuccessful;
     }
+
+    public T getValue() {
+        return value;
+    }
+
 }

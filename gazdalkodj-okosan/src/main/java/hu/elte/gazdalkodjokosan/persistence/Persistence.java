@@ -1,11 +1,12 @@
 package hu.elte.gazdalkodjokosan.persistence;
 
-import hu.elte.gazdalkodjokosan.data.Player;
+import hu.elte.gazdalkodjokosan.common.transfer.PlayerStatus;
 import hu.elte.gazdalkodjokosan.data.Field;
 import hu.elte.gazdalkodjokosan.service.BoardService;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class Persistence implements IPersistence {
@@ -18,12 +19,12 @@ public class Persistence implements IPersistence {
     }
 
     @Override
-    public Player getPlayer(int index) {
-        return boardService.getPlayer(index);
+    public PlayerStatus getPlayer(int index) {
+        return boardService.getPlayerStatus(index).getValue();
     }
 
     @Override
-    public List<Field> updateFields() {
+    public List<Field> getFields() {
         return boardService.getTable();
     }
 

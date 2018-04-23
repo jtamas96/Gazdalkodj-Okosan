@@ -24,55 +24,57 @@ public class DefaultBoardService implements BoardService {
     }
 
     @Override
-    public PlayerColor getNewGame(int playerNumber) {
+    public BoardResponse<Integer> getNewGame(int playerNumber) {
         try {
             model.newGame(playerNumber);
-            return model.getCurrentPlayer().getColor();
+            int i = model.getCurrentPlayer().getIndex();
+            return new BoardResponse<>("", true, i);
+
         } catch (PlayerNumberException ex) {
-            //TODO: error message to user
-            return null;
+            return new BoardResponse<>("Not a valid player number!", false, -1);
         }
     }
 
     @Override
-    public PlayerColor switchToNextPlayer(PlayerColor playerColor) {
-        if(model.getCurrentPlayer().getColor() == playerColor){
+    public BoardResponse<Integer> switchToNextPlayer(int playerIndex) {
+        if(model.getCurrentPlayer().getIndex() == playerIndex){
+            model.switchPlayer();
             model.stepGame();
-            return model.getCurrentPlayer().getColor();
+
+            int i = model.getCurrentPlayer().getIndex();
+            return new BoardResponse<>("", true, i);
 
         }else{
-            //TODO: Error message to user. NOT current player trying to step.
-            return null;
+            return new BoardResponse<>("Not your turn bro!", false, -1);
         }
     }
 
     @Override
-    public PlayerStatus getPlayerStatus(PlayerColor playerColor) {
+    public BoardResponse<PlayerStatus> getPlayerStatus(int playerIndex) {
         Player cp = model.getCurrentPlayer();
-        if(cp.getColor() == playerColor){
+        if(cp.getIndex() == playerIndex){
             try {
-                boolean isGameOver = model.isGameOverForPlayer(playerColor);
+                boolean isGameOver = model.isGameOverForPlayer(playerIndex);
                 int cash = cp.getCash();
                 int debt = cp.getDebt();
                 int index = cp.getIndex();
 
-                List<SaleItem> items = model.getItemsOfUser(playerColor);
+                List<SaleItem> items = model.getItemsOfUser(playerIndex);
 
                 boolean hasHouse = itemPurchased(items, "LAKAS");
                 boolean hasCar = itemPurchased(items, "AUTO");
                 boolean hasBKV = itemPurchased(items, "BKV_BERLET");
 
                 //TODO: fill sets, Andor.
-                return new PlayerStatus(isGameOver, cash, debt, index, hasHouse, hasCar, hasBKV, new HashSet<>(), new HashSet<>());
+                PlayerStatus result = new PlayerStatus(isGameOver, cash, debt, index, hasHouse, hasCar, hasBKV, new HashSet<>(), new HashSet<>());
+                return new BoardResponse<>("", true, result);
 
             } catch (PlayerNotFoundException e) {
-                // TODO: Error message to client.
-                return null;
+                return new BoardResponse<>("Not found player wiht index: " + playerIndex, false, null);
             }
 
         }else{
-            //TODO: Status of the not current player. Rethink the logic.
-            return null;
+            return new BoardResponse<>("You are not active!", false, null);
         }
     }
 
@@ -83,17 +85,17 @@ public class DefaultBoardService implements BoardService {
     }
 
     @Override
-    public BoardResponse buyCar(PlayerColor playerColor, boolean loan, boolean payWithCash) {
+    public BoardResponse<String> buyCar(int playerIndex, boolean loan, boolean payWithCash) {
         try {
             Player player = model.getCurrentPlayer();
 
-            List<SaleItem> items = model.getItemsOfUser(playerColor);
+            List<SaleItem> items = model.getItemsOfUser(playerIndex);
             boolean hasCar = itemPurchased(items, "AUTO");
             if(hasCar){
-                return new BoardResponse("You want more than one?", false);
+                return new BoardResponse<>("You want more than one?", false, "");
             }
-            if(! player.getColor().equals(playerColor)){
-                return new BoardResponse("Not your turn bro!", false);
+            if(player.getIndex() != playerIndex){
+                return new BoardResponse<>("Not your turn bro!", false, "");
             }
 
             int carCost = Item.AUTO.getCost();
@@ -102,45 +104,45 @@ public class DefaultBoardService implements BoardService {
 
                 if (cash >= carCost) { //TODO: buy from DEBT? andor
                     player.setCash(cash - carCost);
-                    return new BoardResponse("", true);
-                } else return new BoardResponse("Not enough money at your packet!", false);
+                    return new BoardResponse<>("", true, "SUCCESS");
+                } else return new BoardResponse<>("Not enough money at your packet!", false, "");
             } else {
                 int bankBalance = player.getBankBalance();
                 if (bankBalance >= carCost) {
                     player.setBankBalance(bankBalance - carCost);
-                    return new BoardResponse("", true);
-                } else return new BoardResponse("Not enough money at your packet!", false);
+                    return new BoardResponse<>("", true, "SUCCESS");
+                } else return new BoardResponse<>("Not enough money at your packet!", false, "");
             }
 
         } catch (PlayerNotFoundException e) {
-            return new BoardResponse("Not Found player with this color: " + playerColor, false);
+            return new BoardResponse<>("Not Found player: " + playerIndex, false, "");
         }
     }
 
     @Override
-    public BoardResponse buyHouse(PlayerColor playerColor, boolean loan, boolean payWithCash) {
+    public BoardResponse buyHouse(int playerIndex, boolean loan, boolean payWithCash) {
         return null;
     }
 
     @Override
-    public BoardResponse buyInsurance(PlayerColor playerColor, boolean payWithCash, Insurance insurance) {
+    public BoardResponse buyInsurance(int playerIndex, boolean payWithCash, Insurance insurance) {
         return null;
     }
 
     @Override
-    public BoardResponse buyHouseAsset(PlayerColor playerColor, boolean payWithCash, HouseAsset houseAsset) {
+    public BoardResponse buyHouseAsset(int playerIndex, boolean payWithCash, HouseAsset houseAsset) {
         return null;
     }
 
     @Override
-    public BoardResponse buyBKVPass(PlayerColor playerColor, boolean payWithCash) {
+    public BoardResponse buyBKVPass(int playerIndex, boolean payWithCash) {
         return null;
     }
 
     @Override
-    public BoardResponse transferMoney(PlayerColor playerColor, int amount) {
+    public BoardResponse<String> transferMoney(int playerIndex, int amount) {
         Player cp = model.getCurrentPlayer();
-        if(cp.getColor() == playerColor){
+        if(cp.getIndex() == playerIndex){
             int cash = cp.getCash();
 
             if(cash >= amount){
@@ -148,10 +150,10 @@ public class DefaultBoardService implements BoardService {
                 cp.setBankBalance(debt + amount);
                 cp.setCash(cash - amount);
 
-                return new BoardResponse("", true);
-            }else return new BoardResponse("Not enough money!", false);
+                return new BoardResponse<>("", true, "");
+            }else return new BoardResponse<>("Not enough money!", false, "");
         }else{
-            return new BoardResponse("Not Authorized for this!", false);
+            return new BoardResponse<>("Not Authorized for this!", false, "");
         }
     }
 
