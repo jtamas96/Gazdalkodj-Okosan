@@ -1,17 +1,18 @@
-package hu.elte.gazdalkodjokosan.model;
+package hu.elte.gazdalkodjokosan.service.model;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
+import hu.elte.gazdalkodjokosan.data.Field;
+import hu.elte.gazdalkodjokosan.data.Player;
+import hu.elte.gazdalkodjokosan.data.SaleItem;
+import hu.elte.gazdalkodjokosan.data.enums.Item;
+import hu.elte.gazdalkodjokosan.model.GameSteppedEvent;
+import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNotFoundException;
 import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNumberException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
+
+import java.util.*;
 
 @Component
 public class GameModel {
@@ -19,15 +20,23 @@ public class GameModel {
     private List<Player> players;
     private List<Field> table;
     private Player currentPlayer;
-
-    @Autowired
+    private Map<Player, List<SaleItem>> itemsMap;  
     private ApplicationEventPublisher publisher;
+    
+    @Autowired
+    public GameModel(ApplicationEventPublisher publisher) {
+        this.publisher = publisher;
+    }
 
     public void newGame(int playerNumber) throws PlayerNumberException {
-        if (playerNumber >= 2 || playerNumber <= 6) {
+        if (playerNumber >= 2 && playerNumber <= 6) {
             players = new ArrayList<>();
+            itemsMap = new HashMap<>();
+
             for (int i = 0; i < playerNumber; i++) {
-                players.add(new Player(3000000, 238000, 0, 0, i));
+                Player p = new Player(3000000, 238000, 0, 0, i);
+                players.add(p);
+                itemsMap.put(p, SaleItem.getInitialListForUser());
             }
             currentPlayer = players.get(0);
             table = new ArrayList<>();
@@ -52,6 +61,8 @@ public class GameModel {
             int nextPosition = step + currentPosition - table.size() - 1;
             if (nextPosition == 0) {
                 playerSteppedOnStart(true);
+            }else{
+                playerSteppedOnStart(false);
             }
             table.get(nextPosition).addPlayer(currentPlayer);
             currentPlayer.setPosition(nextPosition);
@@ -74,5 +85,39 @@ public class GameModel {
 
     public Player getCurrentPlayer() {
         return currentPlayer;
+    }
+
+    public boolean isGameOverForPlayer(int playerIndex) throws PlayerNotFoundException {
+        Player player = getPlayerByColor(playerIndex);
+
+        List<SaleItem> items = getItemsOfUser(playerIndex);
+
+        boolean hasAllMandatory = items.stream()
+                .filter(userItem -> Item.valueOf(userItem.name).getMandatory())
+                .allMatch(SaleItem::isPurchased);
+        int allCash = player.getCash() + player.getDebt();
+        return hasAllMandatory && allCash >= 600000;
+    }
+
+    public List<SaleItem> getItemsOfUser(int playerIndex) throws PlayerNotFoundException {
+        Player player = getPlayerByColor(playerIndex);
+        return itemsMap.getOrDefault(player, new ArrayList<>());
+    }
+
+    private Player getPlayerByColor(int playerIndex) throws PlayerNotFoundException {
+        Optional<Player> optPlayer = players.stream()
+                .filter(p -> p.getIndex() == playerIndex)
+                .findFirst();
+
+        if (optPlayer.isPresent()) {
+            return optPlayer.get();
+        } else {
+            throw new PlayerNotFoundException("Player not found with color: " + playerIndex);
+        }
+    }
+
+    public void switchPlayer(){
+        int newPlayersIndex = (currentPlayer.getIndex() + 1) % players.size();
+        currentPlayer = players.get(newPlayersIndex);
     }
 }
