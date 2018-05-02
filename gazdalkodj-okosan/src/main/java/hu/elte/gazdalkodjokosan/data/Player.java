@@ -1,26 +1,34 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package hu.elte.gazdalkodjokosan.data;
 
-import hu.elte.gazdalkodjokosan.common.transfer.PlayerColor;
+import hu.elte.gazdalkodjokosan.common.transfer.Insurance;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class Player {
 
     private int bankBalance;
-    private int cash;
     private int debt;
     private int position;
     private int index;
+    private List<SaleItem> items;
+    private boolean winner;
+    private boolean withHouse;
+    private boolean withCar;
+    private boolean withBKVPass;
+    private final Set<Insurance> insurances;
 
-    public Player(int bankBalance, int cash, int debt, int position, int index) {
+    public Player(int bankBalance, int debt, int position, int index, List<SaleItem> items) {
         this.bankBalance = bankBalance;
-        this.cash = cash;
         this.debt = debt;
         this.position = position;
         this.index = index;
+        this.items = items;
+        winner = false;
+        withHouse = false;
+        withCar = false;
+        withBKVPass = false;
+        insurances = new HashSet<>();
     }
 
     public int getBankBalance() {
@@ -29,14 +37,6 @@ public class Player {
 
     public void setBankBalance(int bankBalance) {
         this.bankBalance = bankBalance;
-    }
-
-    public int getCash() {
-        return cash;
-    }
-
-    public void setCash(int cash) {
-        this.cash = cash;
     }
 
     public int getDebt() {
@@ -54,8 +54,33 @@ public class Player {
     public void setPosition(int position) {
         this.position = position;
     }
-    
+
     public int getIndex() {
         return index;
     }
+
+    public List<SaleItem> getItems() {
+        return items;
+    }
+
+    public boolean isWinner() {
+        return winner;
+    }
+
+    public boolean isWithHouse() {
+        return withHouse;
+    }
+
+    public boolean isWithCar() {
+        return withCar;
+    }
+
+    public boolean isWithBKVPass() {
+        return withBKVPass;
+    }
+
+    public Set<Insurance> getInsurances() {
+        return insurances;
+    }
+
 }
