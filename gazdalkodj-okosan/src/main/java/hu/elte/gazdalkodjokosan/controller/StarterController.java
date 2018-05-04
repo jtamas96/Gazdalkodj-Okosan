@@ -6,9 +6,12 @@
 package hu.elte.gazdalkodjokosan.controller;
 
 import hu.elte.gazdalkodjokosan.model.ClientModel;
+import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNumberException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -50,7 +53,11 @@ public class StarterController implements Initializable {
 
     @FXML
     private void startGamePressed(ActionEvent event) throws IOException {
-        clientModel.newGame(3);
+        try {
+            clientModel.newGame(3);
+        } catch (PlayerNumberException ex) {
+           //Todo error message
+        }
         Parent parent = FXMLLoader.load(getClass().getResource("/fxml/GameBoard.fxml"));
         Scene scene = new Scene(parent);
 
