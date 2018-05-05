@@ -1,8 +1,11 @@
 package hu.elte.gazdalkodjokosan.data;
 
 import hu.elte.gazdalkodjokosan.common.transfer.Insurance;
+import hu.elte.gazdalkodjokosan.data.enums.Item;
+
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class Player {
@@ -83,4 +86,9 @@ public class Player {
         return insurances;
     }
 
+    public Optional<SaleItem> getItem(Item it){
+        return items.stream()
+                .filter(item -> item.name.equals(it.name()))
+                .findFirst();
+    }
 }

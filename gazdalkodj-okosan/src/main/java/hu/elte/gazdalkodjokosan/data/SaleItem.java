@@ -10,8 +10,9 @@ public class SaleItem { // A mutable representation of Items for each user.
     public String name;
     private boolean available = false;
     boolean purchased = false;
+    int reducedPriceWith = 0;
 
-    public SaleItem(Item item){
+    public SaleItem(Item item) {
         name = item.name();
     }
 
@@ -27,15 +28,25 @@ public class SaleItem { // A mutable representation of Items for each user.
         available = true;
     }
 
+    public void reducePriceWith(int val) {
+        reducedPriceWith += val;
+    }
+
     public void purchase() {
         purchased = true;
     }
 
-    public boolean isPurchased() { return purchased;}
+    public void confiscate() {
+        purchased = false;
+    }
 
-    public static List<SaleItem> getInitialListForUser(){
+    public boolean isPurchased() {
+        return purchased;
+    }
+
+    public static List<SaleItem> getInitialListForUser() {
         List<SaleItem> result = new ArrayList<>();
-        for(Item i: Item.values()){
+        for (Item i : Item.values()) {
             result.add(new SaleItem(i));
         }
         return result;
