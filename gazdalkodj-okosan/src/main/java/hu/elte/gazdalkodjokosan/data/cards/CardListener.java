@@ -5,11 +5,11 @@ import hu.elte.gazdalkodjokosan.data.Player;
 import java.util.function.Consumer;
 
 public interface CardListener {
-    public void stepForward(int a);
+    public void stepForward(int step);
 
-    public void stepOnBoard(int a);
+    public void stepOnBoard(int step);
 
-    public void writeMessage(String s);
+    public void writeMessage(String message);
 
     public void immobilize(int round);
 

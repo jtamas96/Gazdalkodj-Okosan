@@ -20,6 +20,7 @@ public class Player {
     private boolean withCar;
     private boolean withBKVPass;
     private final Set<Insurance> insurances;
+    private int immobilized;
 
     public Player(int bankBalance, int debt, int position, int index, List<SaleItem> items) {
         this.bankBalance = bankBalance;
@@ -32,6 +33,7 @@ public class Player {
         withCar = false;
         withBKVPass = false;
         insurances = new HashSet<>();
+        immobilized = 0;
     }
 
     public int getBankBalance() {
@@ -68,6 +70,14 @@ public class Player {
 
     public boolean isWinner() {
         return winner;
+    }
+    
+    public int getImmobilized() {
+        return immobilized;
+    }
+    
+    public void setImmobilized(int rounds) {
+        immobilized = rounds;
     }
 
     public boolean isWithHouse() {

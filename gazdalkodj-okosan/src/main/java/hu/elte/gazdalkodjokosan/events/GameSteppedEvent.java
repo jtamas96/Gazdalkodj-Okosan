@@ -1,18 +1,26 @@
 package hu.elte.gazdalkodjokosan.events;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-
+import hu.elte.gazdalkodjokosan.data.Field;
+import hu.elte.gazdalkodjokosan.data.Player;
+import java.util.List;
 import org.springframework.context.ApplicationEvent;
 
 public class GameSteppedEvent extends ApplicationEvent {
 
-    public GameSteppedEvent(Object source) {
+    private final Player currentPlayer;
+    private final List<Field> table;
+    
+    public GameSteppedEvent(Object source, Player currentPlayer, List<Field> table) {
         super(source);
+        this.currentPlayer = currentPlayer;
+        this.table = table;
     }
 
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
+    
+    public List<Field> getTable() {
+        return table;
+    }
 }
