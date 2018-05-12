@@ -6,21 +6,28 @@ import hu.elte.gazdalkodjokosan.service.model.GameModel;
 import hu.elte.gazdalkodjokosan.data.Player;
 import hu.elte.gazdalkodjokosan.data.SaleItem;
 import hu.elte.gazdalkodjokosan.data.enums.Item;
+import hu.elte.gazdalkodjokosan.events.GameSteppedEvent;
+import hu.elte.gazdalkodjokosan.events.MessageEvent;
+import hu.elte.gazdalkodjokosan.events.UpdatePlayerEvent;
 import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNotFoundException;
 import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNumberException;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DefaultBoardService implements BoardService {
 
     private GameModel model;
+    private final ApplicationEventPublisher publisher;
 
     @Autowired
-    public DefaultBoardService(GameModel model) {
+    public DefaultBoardService(GameModel model, ApplicationEventPublisher publisher) {
         this.model = model;
+        this.publisher = publisher;
     }
 
     @Override
@@ -132,5 +139,26 @@ public class DefaultBoardService implements BoardService {
     @Override
     public void stepGame() {
         model.stepGame();
+    }
+
+    @EventListener
+    public void GameStepped(GameSteppedEvent event) {
+        if (event.getSource().equals(model)) {
+            publisher.publishEvent(new GameSteppedEvent(this, event.getCurrentPlayer(), event.getTable()));
+        }
+    }
+
+    @EventListener
+    public void SendMessage(MessageEvent event) {
+        if (event.getSource().equals(model)) {
+            publisher.publishEvent(new MessageEvent(this, event.getMessage()));
+        }
+    }
+
+    @EventListener
+    public void UpdatePlayer(UpdatePlayerEvent event) {
+        if (event.getSource().equals(model)) {
+            publisher.publishEvent(new UpdatePlayerEvent(this, event.getPlayer()));
+        }
     }
 }

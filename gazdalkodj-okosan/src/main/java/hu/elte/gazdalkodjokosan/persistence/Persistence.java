@@ -3,6 +3,9 @@ package hu.elte.gazdalkodjokosan.persistence;
 import hu.elte.gazdalkodjokosan.common.transfer.BoardResponse;
 import hu.elte.gazdalkodjokosan.data.Field;
 import hu.elte.gazdalkodjokosan.data.Player;
+import hu.elte.gazdalkodjokosan.events.GameSteppedEvent;
+import hu.elte.gazdalkodjokosan.events.MessageEvent;
+import hu.elte.gazdalkodjokosan.events.UpdatePlayerEvent;
 import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNumberException;
 import hu.elte.gazdalkodjokosan.service.BoardService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 
 @Component
 public class Persistence implements IPersistence {
@@ -40,7 +44,7 @@ public class Persistence implements IPersistence {
         if (!response.isActionSuccessful()) {
             throw new PlayerNumberException(response.getErrorMessage());
         }
-        
+
         return response.getValue();
     }
 
@@ -59,4 +63,24 @@ public class Persistence implements IPersistence {
         boardService.stepGame();
     }
 
+    @EventListener
+    public void GameStepped(GameSteppedEvent event) {
+        if (event.getSource().equals(boardService)) {
+            publisher.publishEvent(new GameSteppedEvent(this, event.getCurrentPlayer(), event.getTable()));
+        }
+    }
+
+    @EventListener
+    public void SendMessage(MessageEvent event) {
+        if (event.getSource().equals(boardService)) {
+            publisher.publishEvent(new MessageEvent(this, event.getMessage()));
+        }
+    }
+
+    @EventListener
+    public void UpdatePlayer(UpdatePlayerEvent event) {
+        if (event.getSource().equals(boardService)) {
+            publisher.publishEvent(new UpdatePlayerEvent(this, event.getPlayer()));
+        }
+    }
 }

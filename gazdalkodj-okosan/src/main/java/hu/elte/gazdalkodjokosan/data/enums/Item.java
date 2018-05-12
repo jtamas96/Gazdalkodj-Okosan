@@ -10,7 +10,9 @@ public enum Item {
     HAZORZO_BISZT(30000, false, false, null, null, null),
     BKV_BERLET(9000, false, false, null, null, null),
     KONYHA_BUTOR(300000, false, true, null, null, null),
+    SZOBA_BUTOR(900000, false, false, null, null, null),
     TV(70000, false, true, null, null, null),
+    MOSOGEP(90000, false, false, null, null, null),
     KONYVEK(8000, false, true, null, null, null),
     SPORT_FELSZERELES(25000, false, false, null, null, null), //TODO: Kell vagy nem?
     // TODO: illetve mik is kellenek a nyeréshez?
