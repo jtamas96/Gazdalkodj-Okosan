@@ -1,5 +1,7 @@
 package hu.elte.gazdalkodjokosan;
 
+import hu.elte.gazdalkodjokosan.view.FxmlView;
+import hu.elte.gazdalkodjokosan.view.StageManager;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
@@ -16,28 +18,26 @@ import java.net.URL;
 @SpringBootApplication
 public class GazdalkodjOkosanApplication extends Application {
     private ConfigurableApplicationContext context;
-    private Parent rootNode;
-
+    private StageManager stageManager;
+    
     @Override
     public void init() throws Exception {
         SpringApplicationBuilder builder = new SpringApplicationBuilder(GazdalkodjOkosanApplication.class);
         context = builder.run(getParameters().getRaw().toArray(new String[0]));
-
-        URL url = getClass().getResource("/fxml/Starter.fxml");
-        FXMLLoader loader = new FXMLLoader(url);
-        loader.setControllerFactory(context::getBean);
-        rootNode = loader.load();
+    
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        double width = 230;
-        double height = 150;
-
-        primaryStage.setScene(new Scene(rootNode, width, height));
-        primaryStage.centerOnScreen();
-        primaryStage.setTitle("Gazdálkodj okosan");
-        primaryStage.show();
+        stageManager = context.getBean(StageManager.class, primaryStage);        
+//        double width = 230;
+//        double height = 150;
+//
+//        primaryStage.setScene(new Scene(rootNode, width, height));
+//        primaryStage.centerOnScreen();
+//        primaryStage.setTitle("Gazdálkodj okosan");
+//        primaryStage.show();
+        stageManager.switchScene(FxmlView.STARTER);
     }
 
     @Override

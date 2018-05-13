@@ -32,4 +32,15 @@ public class ClientModel {
         persistence.requestStep();
     }
 
+    public List<Player> getPlayers() {
+        return players;
+    }
+
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
+    
+    public void endRound() {
+        persistence.endRound(currentPlayer.getIndex());
+    }
 }

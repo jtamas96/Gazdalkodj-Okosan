@@ -20,4 +20,6 @@ public interface IPersistence {
     public Player getCurrentPlayer();
     
     public void requestStep();
+    
+    public void endRound(int playerNumber);
 }

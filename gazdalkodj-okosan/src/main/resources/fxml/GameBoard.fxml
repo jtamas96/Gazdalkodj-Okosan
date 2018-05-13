@@ -11,9 +11,9 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="TOP_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<VBox alignment="TOP_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hu.elte.gazdalkodjokosan.controller.GameBoardController">
    <children>
-      <Label text="Játékos">
+      <Label fx:id="playerColor" text="Játékos">
          <VBox.margin>
             <Insets top="20.0" />
          </VBox.margin>
@@ -260,14 +260,6 @@
                <children>
                   <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
                      <children>
-                        <Button mnemonicParsing="false" text="Folyószámlára utalás">
-                           <font>
-                              <Font size="10.0" />
-                           </font>
-                           <HBox.margin>
-                              <Insets left="2.0" />
-                           </HBox.margin>
-                        </Button>
                         <Button mnemonicParsing="false" text="Lakás">
                            <font>
                               <Font size="10.0" />
@@ -328,17 +320,16 @@
                   </HBox>
                   <HBox prefHeight="100.0" prefWidth="200.0">
                      <children>
-                        <Label text="Készpénz:" />
-                        <Label text="0">
+                        <Label text="Mező:" />
+                        <Label fx:id="fieldIndex" text="0">
                            <HBox.margin>
                               <Insets left="10.0" />
-                           </HBox.margin>
-                        </Label>
+                           </HBox.margin></Label>
                      </children></HBox>
                   <HBox prefHeight="100.0" prefWidth="200.0">
                      <children>
                         <Label text="Egyenleg:" />
-                        <Label text="0">
+                        <Label fx:id="balance" text="0">
                            <HBox.margin>
                               <Insets left="10.0" />
                            </HBox.margin>
@@ -346,20 +337,21 @@
                      </children></HBox>
                   <HBox alignment="TOP_CENTER" prefHeight="100.0" prefWidth="200.0">
                      <children>
-                        <CheckBox disable="true" mnemonicParsing="false" text="Lakás" />
-                        <CheckBox disable="true" mnemonicParsing="false" text="Autó" />
-                        <CheckBox disable="true" mnemonicParsing="false" text="Biztosítás autóra" />
-                        <CheckBox disable="true" mnemonicParsing="false" text="Konyhabútor" />
-                        <CheckBox disable="true" mnemonicParsing="false" text="Szobabútor" />
-                        <CheckBox disable="true" mnemonicParsing="false" text="Mosógép" />
-                        <CheckBox disable="true" mnemonicParsing="false" text="Hűtőszekrény" />
-                        <CheckBox disable="true" mnemonicParsing="false" text="Sütő" />
-                        <CheckBox disable="true" mnemonicParsing="false" text="TV" />
+                        <CheckBox fx:id="housePurchased" disable="true" mnemonicParsing="false" text="Lakás" />
+                        <CheckBox fx:id="carPurchased" disable="true" mnemonicParsing="false" text="Autó" />
+                        <CheckBox fx:id="carInsurancePurchased" disable="true" mnemonicParsing="false" text="Biztosítás autóra" />
+                        <CheckBox fx:id="kitchenFurniturePurchased" disable="true" mnemonicParsing="false" text="Konyhabútor" />
+                        <CheckBox fx:id="roomFurniturePurchased" disable="true" mnemonicParsing="false" text="Szobabútor" />
+                        <CheckBox fx:id="washingMachinePurchased" disable="true" mnemonicParsing="false" text="Mosógép" />
+                        <CheckBox fx:id="fridgePurchased" disable="true" mnemonicParsing="false" text="Hűtőszekrény" />
+                        <CheckBox fx:id="stovePurchased" disable="true" mnemonicParsing="false" text="Sütő" />
+                        <CheckBox fx:id="tvPurchased" disable="true" mnemonicParsing="false" text="TV" />
                      </children>
                   </HBox>
                </children>
             </VBox>
          </center>
       </BorderPane>
+      <Button mnemonicParsing="false" onAction="#endRoundAction" text="Kör  vége" />
    </children>
 </VBox>

@@ -1,5 +1,6 @@
 package hu.elte.gazdalkodjokosan.service;
 
+import ch.qos.logback.core.CoreConstants;
 import hu.elte.gazdalkodjokosan.common.transfer.*;
 import hu.elte.gazdalkodjokosan.data.Field;
 import hu.elte.gazdalkodjokosan.service.model.GameModel;
