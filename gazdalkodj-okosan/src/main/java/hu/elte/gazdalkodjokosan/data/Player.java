@@ -1,8 +1,11 @@
 package hu.elte.gazdalkodjokosan.data;
 
 import hu.elte.gazdalkodjokosan.common.transfer.Insurance;
+import hu.elte.gazdalkodjokosan.data.enums.Item;
+
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class Player {
@@ -17,6 +20,7 @@ public class Player {
     private boolean withCar;
     private boolean withBKVPass;
     private final Set<Insurance> insurances;
+    private int immobilized;
 
     public Player(int bankBalance, int debt, int position, int index, List<SaleItem> items) {
         this.bankBalance = bankBalance;
@@ -29,6 +33,7 @@ public class Player {
         withCar = false;
         withBKVPass = false;
         insurances = new HashSet<>();
+        immobilized = 0;
     }
 
     public int getBankBalance() {
@@ -66,6 +71,14 @@ public class Player {
     public boolean isWinner() {
         return winner;
     }
+    
+    public int getImmobilized() {
+        return immobilized;
+    }
+    
+    public void setImmobilized(int rounds) {
+        immobilized = rounds;
+    }
 
     public boolean isWithHouse() {
         return withHouse;
@@ -83,4 +96,9 @@ public class Player {
         return insurances;
     }
 
+    public Optional<SaleItem> getItem(Item it){
+        return items.stream()
+                .filter(item -> item.name.equals(it.name()))
+                .findFirst();
+    }
 }

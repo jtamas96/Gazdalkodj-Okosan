@@ -5,6 +5,7 @@
  */
 package hu.elte.gazdalkodjokosan.controller;
 
+import hu.elte.gazdalkodjokosan.GazdalkodjOkosanApplication;
 import hu.elte.gazdalkodjokosan.model.ClientModel;
 import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNumberException;
 import hu.elte.gazdalkodjokosan.view.FxmlView;
@@ -36,6 +37,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class StarterController implements Initializable {
+    Parent parent;
 
     ClientModel clientModel;
     StageManager stageManager;
@@ -58,10 +60,14 @@ public class StarterController implements Initializable {
     @FXML
     private void startGamePressed(ActionEvent event) throws IOException {
         try {
-            clientModel.newGame(Integer.parseInt(((RadioButton)playerNum.getSelectedToggle()).getText()));
+            RadioButton selectedRadioButton = (RadioButton) playerNum.getSelectedToggle();
+            String value = selectedRadioButton.getText();
+
+            clientModel.newGame(Integer.parseInt(value));
             stageManager.switchScene(FxmlView.BOARD);
         } catch (PlayerNumberException ex) {
-           //Todo error message
+           //Now the client UI protects from invalid values!
+            //TODO: Error handling in other contexts.
         }
     }
 

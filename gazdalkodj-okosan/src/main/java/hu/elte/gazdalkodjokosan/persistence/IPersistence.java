@@ -1,6 +1,5 @@
 package hu.elte.gazdalkodjokosan.persistence;
 
-import hu.elte.gazdalkodjokosan.common.transfer.BoardResponse;
 import hu.elte.gazdalkodjokosan.data.Field;
 import hu.elte.gazdalkodjokosan.data.Player;
 import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNumberException;
@@ -20,6 +19,6 @@ public interface IPersistence {
     public Player getCurrentPlayer();
     
     public void requestStep();
-    
-    public void endRound(int playerNumber);
+
+    Player switchPlayer(int currentPlayerIndex);
 }
