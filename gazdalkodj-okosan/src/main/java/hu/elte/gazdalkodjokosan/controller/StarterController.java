@@ -39,15 +39,17 @@ import org.springframework.stereotype.Component;
 public class StarterController implements Initializable {
     Parent parent;
 
-    ClientModel clientModel;
+    public ClientModel clientModel;
+    @Autowired @Lazy
     StageManager stageManager;
+
+
     @FXML
     private ToggleGroup playerNum;
 
-    @Autowired @Lazy
-    StarterController(ClientModel clientModel, StageManager stageManager) {
+    @Autowired
+    StarterController(ClientModel clientModel) {
         this.clientModel = clientModel;
-        this.stageManager = stageManager;
     }
 
     /**

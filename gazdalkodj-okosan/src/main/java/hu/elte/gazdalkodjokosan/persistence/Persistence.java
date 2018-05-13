@@ -63,11 +63,6 @@ public class Persistence implements IPersistence {
     public void requestStep() {
         boardService.stepGame();
     }
-    
-    @Override
-    public void endRound(int playerNumber) {
-        boardService.switchToNextPlayer(playerNumber);
-    }
 
     @Override
     public Player switchPlayer(int currentPlayerIndex){

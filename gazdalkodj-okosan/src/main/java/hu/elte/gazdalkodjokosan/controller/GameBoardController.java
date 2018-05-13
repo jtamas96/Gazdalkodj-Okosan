@@ -8,34 +8,27 @@ package hu.elte.gazdalkodjokosan.controller;
 import hu.elte.gazdalkodjokosan.common.transfer.Insurance;
 import hu.elte.gazdalkodjokosan.data.Player;
 import hu.elte.gazdalkodjokosan.data.enums.Item;
-import hu.elte.gazdalkodjokosan.model.ClientModel;
-import hu.elte.gazdalkodjokosan.view.StageManager;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.ResourceBundle;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import hu.elte.gazdalkodjokosan.events.BuyEvent;
 import hu.elte.gazdalkodjokosan.events.GameSteppedEvent;
 import hu.elte.gazdalkodjokosan.events.MessageEvent;
 import hu.elte.gazdalkodjokosan.events.UpdatePlayerEvent;
 import hu.elte.gazdalkodjokosan.model.ClientModel;
+import hu.elte.gazdalkodjokosan.view.StageManager;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
 import javafx.util.Duration;
 import org.controlsfx.control.Notifications;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
-
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
+import java.util.Arrays;
 import java.util.ResourceBundle;
 
 /**
@@ -48,15 +41,16 @@ public class GameBoardController implements Initializable {
 
     ClientModel clientModel;
 
+    @Autowired @Lazy
     StageManager stageManager;
-    
+
     @FXML
     Label playerColor;
     @FXML
-    Label balance;    
+    Label balance;
     @FXML
     Label fieldIndex;
-    
+
     @FXML
     CheckBox housePurchased;
     @FXML
@@ -75,15 +69,13 @@ public class GameBoardController implements Initializable {
     CheckBox stovePurchased;
     @FXML
     CheckBox tvPurchased;
-    
-    
+
+
     @Autowired
-    @Lazy
-    GameBoardController(ClientModel clientModel, StageManager stageManager) {
+    GameBoardController(ClientModel clientModel) {
         this.clientModel = clientModel;
-        this.stageManager = stageManager;
     }
-    
+
     /**
      * Initializes the controller class.
      */
@@ -91,33 +83,32 @@ public class GameBoardController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         System.out.println("Játékosok száma: " + clientModel.getPlayers().size());
         System.out.println("Játékosok: " + Arrays.toString(clientModel.getPlayers().stream().map(
-            p -> "Index: " + p.getIndex()).toArray()));
+                p -> "Index: " + p.getIndex()).toArray()));
         System.out.println("Soronlévő játékos: " + clientModel.getCurrentPlayer().getIndex());
-        
-        
+
+
         startRound();
     }
-    
+
     private void startRound() {
-        clientModel.stepGame();
         displayPlayerInfo();
     }
-    
+
     private void displayPlayerInfo() {
         Player currentPlayer = clientModel.getCurrentPlayer();
         playerColor.setText("Játékos " + clientModel.getCurrentPlayer().getIndex());
-        balance.setText(currentPlayer.getBankBalance()+"");
-        fieldIndex.setText(currentPlayer.getPosition()+"");
+        balance.setText(currentPlayer.getBankBalance() + "");
+        fieldIndex.setText(currentPlayer.getPosition() + "");
         setWinningCriteriaIndicators(currentPlayer);
     }
-    
+
     @FXML
-    public void endRoundAction(ActionEvent event){
+    public void endRoundAction(ActionEvent event) {
         System.out.println("kör vége");
         clientModel.switchPlayer();
         startRound();
     }
-    
+
     private void setWinningCriteriaIndicators(Player player) {
         indicateOwnership(housePurchased, player.isWithHouse());
         indicateOwnership(carPurchased, player.isWithCar());
@@ -129,16 +120,16 @@ public class GameBoardController implements Initializable {
         indicateOwnership(stovePurchased, true);
         indicateOwnership(tvPurchased, player.getItems().contains(Item.TV));
     }
-    
+
     private void indicateOwnership(CheckBox checkBox, boolean value) {
-        
+
         if (value) {
             checkBox.setStyle("-fx-opacity: 1");
             checkBox.setSelected(true);
         } else {
             checkBox.setDisable(true);
             //checkBox.setSelected(false);
-        // TODO
+            // TODO
         }
     }
 
@@ -162,7 +153,7 @@ public class GameBoardController implements Initializable {
     @EventListener
     public void SendMessage(MessageEvent event) {
         if (event.getSource().equals(clientModel)) {
-           //Todo react
+            //Todo react
             Notifications notiBuilder = Notifications.create()
                     .title("Gazdalkodj okosan!")
                     .text(event.getMessage())
@@ -182,8 +173,8 @@ public class GameBoardController implements Initializable {
     }
 
     @EventListener
-    public void BuyItems(BuyEvent event){
-        if(event.getSource().equals(clientModel)){
+    public void BuyItems(BuyEvent event) {
+        if (event.getSource().equals(clientModel)) {
             System.out.println("Vasarolsz most !");
         }
     }
