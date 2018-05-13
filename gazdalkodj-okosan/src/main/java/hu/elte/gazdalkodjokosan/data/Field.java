@@ -5,29 +5,28 @@
  */
 package hu.elte.gazdalkodjokosan.data;
 
-import hu.elte.gazdalkodjokosan.data.Player;
 import java.util.List;
 
 public class Field {
 
-    private final List<Player> players;
+    private final List<Player> playersOnFiled;
     private final int number;
 
     public Field(int number, List<Player> players) {
         this.number = number;
-        this.players = players;
+        this.playersOnFiled = players;
     }
 
     public List<Player> getPlayers() {
-        return players;
+        return playersOnFiled;
     }
 
     public void addPlayer(Player player) {
-        players.add(player);
+        playersOnFiled.add(player);
     }
 
     public void removePlayer(Player player) {
-        players.remove(player);
+        playersOnFiled.remove(player);
     }
 
     public int getNumber() {

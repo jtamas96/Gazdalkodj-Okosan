@@ -3,6 +3,7 @@ package hu.elte.gazdalkodjokosan.persistence;
 import hu.elte.gazdalkodjokosan.common.transfer.BoardResponse;
 import hu.elte.gazdalkodjokosan.data.Field;
 import hu.elte.gazdalkodjokosan.data.Player;
+import hu.elte.gazdalkodjokosan.events.BuyEvent;
 import hu.elte.gazdalkodjokosan.events.GameSteppedEvent;
 import hu.elte.gazdalkodjokosan.events.MessageEvent;
 import hu.elte.gazdalkodjokosan.events.UpdatePlayerEvent;
@@ -63,6 +64,17 @@ public class Persistence implements IPersistence {
         boardService.stepGame();
     }
 
+    @Override
+    public Player switchPlayer(int currentPlayerIndex){
+        BoardResponse<Player> resp = boardService.switchToNextPlayer(currentPlayerIndex);
+        if(resp.isActionSuccessful()){
+            return resp.getValue();
+        }else{
+            System.out.println("Error:" + resp.getErrorMessage());
+        }
+        return null;
+    }
+
     @EventListener
     public void GameStepped(GameSteppedEvent event) {
         if (event.getSource().equals(boardService)) {
@@ -81,6 +93,13 @@ public class Persistence implements IPersistence {
     public void UpdatePlayer(UpdatePlayerEvent event) {
         if (event.getSource().equals(boardService)) {
             publisher.publishEvent(new UpdatePlayerEvent(this, event.getPlayer()));
+        }
+    }
+
+    @EventListener
+    public void BuyItems(BuyEvent event){
+        if(event.getSource().equals(boardService)){
+            publisher.publishEvent(new BuyEvent(this, event.getPlayer()));
         }
     }
 }

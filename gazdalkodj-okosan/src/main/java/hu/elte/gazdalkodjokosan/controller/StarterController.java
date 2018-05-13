@@ -5,6 +5,7 @@
  */
 package hu.elte.gazdalkodjokosan.controller;
 
+import hu.elte.gazdalkodjokosan.GazdalkodjOkosanApplication;
 import hu.elte.gazdalkodjokosan.model.ClientModel;
 import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNumberException;
 import java.io.IOException;
@@ -20,9 +21,12 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Component;
 
 /**
@@ -32,6 +36,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class StarterController implements Initializable {
+    Parent parent;
 
     // BoardService boardService;
     ClientModel clientModel;
@@ -54,11 +59,19 @@ public class StarterController implements Initializable {
     @FXML
     private void startGamePressed(ActionEvent event) throws IOException {
         try {
-            clientModel.newGame(3);
+            RadioButton selectedRadioButton = (RadioButton) playerNum.getSelectedToggle();
+            String value = selectedRadioButton.getText();
+
+            clientModel.newGame(Integer.parseInt(value));
         } catch (PlayerNumberException ex) {
-           //Todo error message
+           //Now the client UI protects from invalid values!
+            //TODO: Error handling in other contexts.
         }
-        Parent parent = FXMLLoader.load(getClass().getResource("/fxml/GameBoard.fxml"));
+        URL gameBoardFxml = getClass().getResource("/fxml/GameBoard.fxml");
+
+        FXMLLoader loader = new FXMLLoader(gameBoardFxml);
+        loader.setControllerFactory(GazdalkodjOkosanApplication.context::getBean);
+        parent = loader.load();
         Scene scene = new Scene(parent);
 
         Stage window = (Stage) ((Node) event.getSource()).getScene().getWindow();

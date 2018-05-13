@@ -2,6 +2,7 @@ package hu.elte.gazdalkodjokosan.service;
 
 import hu.elte.gazdalkodjokosan.common.transfer.*;
 import hu.elte.gazdalkodjokosan.data.Field;
+import hu.elte.gazdalkodjokosan.events.BuyEvent;
 import hu.elte.gazdalkodjokosan.service.model.GameModel;
 import hu.elte.gazdalkodjokosan.data.Player;
 import hu.elte.gazdalkodjokosan.data.SaleItem;
@@ -42,16 +43,13 @@ public class DefaultBoardService implements BoardService {
     }
 
     @Override
-    public BoardResponse<Integer> switchToNextPlayer(int playerIndex) {
+    public BoardResponse<Player> switchToNextPlayer(int playerIndex) {
         if (model.getCurrentPlayer().getIndex() == playerIndex) {
             model.switchPlayer();
-            model.stepGame();
-
-            int i = model.getCurrentPlayer().getIndex();
-            return new BoardResponse<>("", true, i);
+            return new BoardResponse<>("", true, model.getCurrentPlayer());
 
         } else {
-            return new BoardResponse<>("Not your turn bro!", false, -1);
+            return new BoardResponse<>("Not your turn bro!", false, null);
         }
     }
 
@@ -159,6 +157,13 @@ public class DefaultBoardService implements BoardService {
     public void UpdatePlayer(UpdatePlayerEvent event) {
         if (event.getSource().equals(model)) {
             publisher.publishEvent(new UpdatePlayerEvent(this, event.getPlayer()));
+        }
+    }
+
+    @EventListener
+    public void BuyItems(BuyEvent event){
+        if(event.getSource().equals(model)){
+            publisher.publishEvent(new BuyEvent(this, event.getPlayer()));
         }
     }
 }
