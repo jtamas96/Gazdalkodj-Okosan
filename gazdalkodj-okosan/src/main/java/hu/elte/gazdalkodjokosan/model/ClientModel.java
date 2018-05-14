@@ -2,6 +2,7 @@ package hu.elte.gazdalkodjokosan.model;
 
 import hu.elte.gazdalkodjokosan.data.Field;
 import hu.elte.gazdalkodjokosan.data.Player;
+import hu.elte.gazdalkodjokosan.events.BuyEvent;
 import hu.elte.gazdalkodjokosan.events.GameSteppedEvent;
 import hu.elte.gazdalkodjokosan.events.MessageEvent;
 import hu.elte.gazdalkodjokosan.events.UpdatePlayerEvent;
@@ -37,6 +38,10 @@ public class ClientModel {
     public void stepGame() {
         persistence.requestStep();
     }
+
+    public void switchPlayer(){
+        currentPlayer = persistence.switchPlayer(currentPlayer.getIndex());
+    }
     
     @EventListener
     public void GameStepped(GameSteppedEvent event) {
@@ -57,10 +62,17 @@ public class ClientModel {
     @EventListener
     public void UpdatePlayer(UpdatePlayerEvent event) {
         if (event.getSource().equals(persistence)) {
-            Player player = event.getPlayer();
-            players.set(player.getIndex(), player);
+//            table.get(currentPlayer.getPosition()).removePlayer(currentPlayer);
+//            Player player = event.getPlayer();
+//            players.set(player.getIndex(), player);
             publisher.publishEvent(new UpdatePlayerEvent(this, event.getPlayer()));
         }
     }
 
+    @EventListener
+    public void BuyItems(BuyEvent event){
+        if(event.getSource().equals(persistence)){
+            publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getPurchaseAble()));
+        }
+    }
 }

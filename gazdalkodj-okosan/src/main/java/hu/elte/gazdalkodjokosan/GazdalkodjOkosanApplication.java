@@ -15,12 +15,14 @@ import java.net.URL;
 
 @SpringBootApplication
 public class GazdalkodjOkosanApplication extends Application {
-    private ConfigurableApplicationContext context;
-    private Parent rootNode;
+    public static ConfigurableApplicationContext context;
+    public static SpringApplicationBuilder builder;
+    public Parent rootNode;
+
 
     @Override
     public void init() throws Exception {
-        SpringApplicationBuilder builder = new SpringApplicationBuilder(GazdalkodjOkosanApplication.class);
+        builder = new SpringApplicationBuilder(GazdalkodjOkosanApplication.class);
         context = builder.run(getParameters().getRaw().toArray(new String[0]));
 
         URL url = getClass().getResource("/fxml/Starter.fxml");

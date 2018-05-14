@@ -5,16 +5,16 @@ public enum Item {
     LAKAS(9000000, true, true, 11000000, 2000000, 90000),
     AUTO(7000000, true, true, 7960000, 2500000, 130000),
     GYERMEK_JOVO(180000, false, false, null, null, null),
-    NYUGDIJ_BISZT(180000, false, false,  null, null, null),
-    CASCO_BISZT(50000, false,false, null, null, null),
+    NYUGDIJ_BISZT(180000, false, false, null, null, null),
+    CASCO_BISZT(50000, false, false, null, null, null),
     HAZORZO_BISZT(30000, false, false, null, null, null),
     BKV_BERLET(9000, false, false, null, null, null),
     KONYHA_BUTOR(300000, false, true, null, null, null),
-    SZOBA_BUTOR(900000, false, false, null, null, null),
+    SZOBA_BUTOR(900000, false, true, null, null, null),
     TV(70000, false, true, null, null, null),
-    MOSOGEP(90000, false, false, null, null, null),
-    KONYVEK(8000, false, true, null, null, null),
-    SPORT_FELSZERELES(25000, false, false, null, null, null), //TODO: Kell vagy nem?
+    MOSOGEP(90000, false, true, null, null, null),
+    HUTO(80000, false, true, null, null, null),
+    SUTO(70000, false, true, null, null, null),
     // TODO: illetve mik is kellenek a nyeréshez?
 
     ;

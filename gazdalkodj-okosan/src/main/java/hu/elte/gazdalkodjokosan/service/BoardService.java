@@ -20,7 +20,7 @@ public interface BoardService {
     // initialise game, return the first player's color in the row
     public BoardResponse<List<Field>> getNewGame(int nrPlayers);
     // return the next player's color in the row
-    public BoardResponse<Integer> switchToNextPlayer(int playerIndex);
+    public BoardResponse<Player> switchToNextPlayer(int playerIndex);
     public BoardResponse<List<Player>> getPlayers();
     public void stepGame();
     public BoardResponse<Player> getPlayer(int playerIndex);
