@@ -58,8 +58,6 @@ public class GameModel implements CardListener {
         int immobilized = currentPlayer.getImmobilized();
         if (immobilized > 0) {
             currentPlayer.setImmobilized(immobilized - 1);
-//            switchPlayer(); Ezeket külön Actionok!
-//            stepGame();
         } else {
             Random random = new Random();
             int step = random.nextInt(6) + 1;
@@ -128,6 +126,7 @@ public class GameModel implements CardListener {
     }
 
     private void runFieldEffect(int position) {
+        Map<Item, Boolean> itemsMap = new HashMap<>();
         switch (position) {
             case 1:
                 writeMessage("Kézi csomózású perzsaszőnyegekkel díszíted lakásod. Fizess 30.000 Ft-ot!");
@@ -135,7 +134,8 @@ public class GameModel implements CardListener {
                 break;
             case 2:
                 writeMessage("Megvásárolhatod éves bérletedet 9.000 Ft-ért a BKV-nál. Ha már van bérleted, a BKV mezőin (2-es, 15-ös, 27-es) nem kell többet fizetned.");
-                publisher.publishEvent(new BuyEvent(this, currentPlayer));
+                itemsMap.put(Item.BKV_BERLET, currentPlayer.isWithBKVPass());
+                publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
                 break;
             case 3:
             case 10:
@@ -153,7 +153,8 @@ public class GameModel implements CardListener {
                 break;
             case 5:
                 writeMessage("Megveheted az Ivanicstól a legújabb Volvo modellt egy összegben vagy részletre.");
-                publisher.publishEvent(new BuyEvent(this, currentPlayer));
+                itemsMap.put(Item.AUTO, currentPlayer.isWithCar());
+                publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
                 break;
             case 6:
                 writeMessage("Jól kihasználtad a REGIO játékkereskedés akcióit. Vásárlásodért most csak 5.000 Ft- kell fizetned!");
@@ -171,9 +172,11 @@ public class GameModel implements CardListener {
                 //Todo biztosítás event
                 break;
             case 11:
-                if(currentPlayer.isWithBKVPass() && currentPlayer.getBankBalance() >= 300000){
+                if(currentPlayer.isWithHouse() && currentPlayer.getBankBalance() >= 300000){
                     writeMessage("Ha van pénzed és lakásod, vásárolj modern konyhabútort. Fizess 300.000 Ft-ot!");
-                    publisher.publishEvent(new BuyEvent(this, currentPlayer));
+                    boolean hasFurniture = GameModel.itemPurchased(currentPlayer.getItems(), "KONYHA_BUTOR");
+                    itemsMap.put(Item.KONYHA_BUTOR, hasFurniture);
+                    publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
                 }
                 break;
             case 12:
@@ -203,7 +206,8 @@ public class GameModel implements CardListener {
                 break;
             case 19:
                 writeMessage("Takarékoskodj, mert így szép lakáshoz juthatsz. Ha van pénzed, fizess be 9.500.000 Ft-ot az OTP BANK pénztárába és megkapod a lakásod. Amennyiben részletfizetésre van csak lehetőséged, fizess 2.000.000 Ft-ot A fennmaradó 9.000.000 Ft-ot pedig 90.000 Ft-os részletekben törlesztheted.");
-                publisher.publishEvent(new BuyEvent(this, currentPlayer));
+                itemsMap.put(Item.LAKAS, currentPlayer.isWithHouse());
+                publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
                 break;
             case 20:
                 writeMessage("Sportszereket vásároltál a DECATHLON Sportáruházban az akciós termékekből, 25000 Ft-ot kell fizetned. Vásárlás után sportoltál is, ezért jutalmul húzz egy Szerencsekerék kártyát!");
@@ -245,7 +249,13 @@ public class GameModel implements CardListener {
                 break;
             case 33:
                 writeMessage("Ha van pénzed. Vásárolj elektromos gépeket; hűtőszekrény, mosógépet, sütőt!");
-                publisher.publishEvent(new BuyEvent(this, currentPlayer));
+                boolean hasWashMach = GameModel.itemPurchased(currentPlayer.getItems(), "MOSOGEP");
+                boolean hasRefrig = GameModel.itemPurchased(currentPlayer.getItems(), "HUTO");
+                boolean hasOven = GameModel.itemPurchased(currentPlayer.getItems(), "SUTO");
+                itemsMap.put(Item.MOSOGEP, hasWashMach);
+                itemsMap.put(Item.HUTO, hasRefrig);
+                itemsMap.put(Item.SUTO, hasOven);
+                publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
                 break;
             case 34:
                 writeMessage("Beléptél a KIKA áruházba! Konyhafelszerelésért fizess 40.000 Ft-ot!");
@@ -262,16 +272,21 @@ public class GameModel implements CardListener {
             case 38:
                 if(currentPlayer.isWithHouse()){
                     writeMessage("Ha már van lakásod most vásárolhatsz bele szobabútort. A szobabútor ára 900000 Ft.");
-                    publisher.publishEvent(new BuyEvent(this, currentPlayer));
+                    boolean hasFurniture = GameModel.itemPurchased(currentPlayer.getItems(), "SZOBA_BUTOR");
+                    itemsMap.put(Item.SZOBA_BUTOR, hasFurniture);
+                    publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
                 }
                 break;
             case 39:
                 writeMessage("Takarékoskodj, mert így szép lakáshoz juthatsz. Ha van pénzed, fizess be 9.500.000 Ft-ot az OTP BANK pénztárába, és megkapod a lakásod. Amennyiben részletfizetésre van csak lehetőséged, fizess 2.000.000 Ft-ot! A fennmaradó 9.000000 Ft-ot pedig 90.000 Ft-os részletekben törlesztheted.");
-                publisher.publishEvent(new BuyEvent(this, currentPlayer));
+                itemsMap.put(Item.LAKAS, currentPlayer.isWithHouse());
+                publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
                 break;
             case 40:
                 writeMessage("Az EURONICS Műszaki Áruházában minőséget vásárolhatsz olcsón. Most vedd meg a televíziód! Fizess 70.000 Ft-ot!");
-                publisher.publishEvent(new BuyEvent(this, currentPlayer));
+                boolean hasTV = GameModel.itemPurchased(currentPlayer.getItems(), "TV");
+                itemsMap.put(Item.TV, hasTV);
+                publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
                 break;
             case 41:
                 writeMessage("A Lufthansa kényelmes és gyors utazást biztosít Európa nagyvárosaiba. A Repülőjegyed ára 60.000 Ft.");
@@ -301,8 +316,6 @@ public class GameModel implements CardListener {
         runFieldEffect(currentPlayer.getPosition());
     }
 
-    // TODO: A Stepforward az alabbit kellene felhasznania.
-    // Es ha az alabbiban lenne a start atlepes check akkor mindekett esetben mukodne a check!
     @Override
     public void stepOnBoard(int position) {
         table.get(currentPlayer.getPosition()).removePlayer(currentPlayer);
@@ -315,6 +328,12 @@ public class GameModel implements CardListener {
         table.get(position).addPlayer(currentPlayer);
         publisher.publishEvent(new GameSteppedEvent(this, currentPlayer, table));
         runFieldEffect(position);
+    }
+
+    public static boolean itemPurchased(List<SaleItem> list, String itemName) {
+        return list.stream().filter(i -> i.name.equals(itemName))
+                .findFirst().orElseGet(() -> new SaleItem(Item.valueOf(itemName)))
+                .isPurchased();
     }
 
     @Override

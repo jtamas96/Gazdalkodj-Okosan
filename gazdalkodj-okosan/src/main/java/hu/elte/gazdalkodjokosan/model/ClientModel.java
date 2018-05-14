@@ -62,6 +62,9 @@ public class ClientModel {
     @EventListener
     public void UpdatePlayer(UpdatePlayerEvent event) {
         if (event.getSource().equals(persistence)) {
+//            table.get(currentPlayer.getPosition()).removePlayer(currentPlayer);
+//            Player player = event.getPlayer();
+//            players.set(player.getIndex(), player);
             publisher.publishEvent(new UpdatePlayerEvent(this, event.getPlayer()));
         }
     }
@@ -69,7 +72,7 @@ public class ClientModel {
     @EventListener
     public void BuyItems(BuyEvent event){
         if(event.getSource().equals(persistence)){
-            publisher.publishEvent(new BuyEvent(this, event.getPlayer()));
+            publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getPurchaseAble()));
         }
     }
 }
