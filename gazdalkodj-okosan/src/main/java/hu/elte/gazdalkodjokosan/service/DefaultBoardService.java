@@ -66,19 +66,13 @@ public class DefaultBoardService implements BoardService {
         }
     }
 
-    private boolean itemPurchased(List<SaleItem> list, String itemName) {
-        return list.stream().filter(i -> i.name.equals(itemName))
-                .findFirst().orElseGet(() -> new SaleItem(Item.valueOf(itemName)))
-                .isPurchased();
-    }
-
     @Override
     public BoardResponse<String> buyCar(int playerIndex, boolean loan) {
         try {
             Player player = model.getCurrentPlayer();
 
             List<SaleItem> items = model.getItemsOfUser(playerIndex);
-            boolean hasCar = itemPurchased(items, "AUTO");
+            boolean hasCar = GameModel.itemPurchased(items, "AUTO");
             if (hasCar) {
                 return new BoardResponse<>("You want more than one?", false, "");
             }
@@ -164,7 +158,7 @@ public class DefaultBoardService implements BoardService {
     @EventListener
     public void BuyItems(BuyEvent event){
         if(event.getSource().equals(model)){
-            publisher.publishEvent(new BuyEvent(this, event.getPlayer()));
+            publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getPurchaseAble()));
         }
     }
 }

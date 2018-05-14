@@ -125,7 +125,7 @@ public enum FortuneCardEnum implements FortuneCard {
             cl.writeMessage("12. Kiégett a lakásod! Vissza kell adnod a berendezési tárgyaidat! Ha van Generali Házőrző lakásbiztosításod a biztosító kifizeti a károdat. Ha nincs akkor, ha legközelebb a 9-es mezőre lépsz, kösd meg lakásbiztosításodat.");
             cl.playerUpdateFunction(player -> {
                 if (!player.getInsurances().contains(Insurance.HOUSE)) {
-                    List<Item> berendezes = Arrays.asList(Item.KONYHA_BUTOR, Item.KONYVEK, Item.MOSOGEP, Item.SZOBA_BUTOR, Item.TV);
+                    List<Item> berendezes = Arrays.asList(Item.KONYHA_BUTOR, Item.SZOBA_BUTOR, Item.MOSOGEP, Item.SUTO, Item.HUTO, Item.TV);
                     for (Item item : berendezes) {
                         Optional<SaleItem> optSi = player.getItem(item);
                         optSi.ifPresent(SaleItem::confiscate);
