@@ -312,8 +312,9 @@ public class GameModel implements CardListener {
             table.get(nextPosition).addPlayer(currentPlayer);
             currentPlayer.setPosition(nextPosition);
         }
-        publisher.publishEvent(new GameSteppedEvent(this, currentPlayer, table));
+
         runFieldEffect(currentPlayer.getPosition());
+        publisher.publishEvent(new GameSteppedEvent(this, currentPlayer, table));
     }
 
     @Override

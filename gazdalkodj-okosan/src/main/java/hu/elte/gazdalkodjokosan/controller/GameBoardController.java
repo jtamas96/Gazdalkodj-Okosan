@@ -29,7 +29,14 @@ import org.springframework.stereotype.Component;
 
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 
 /**
  * FXML Controller class
@@ -70,6 +77,8 @@ public class GameBoardController implements Initializable {
     @FXML
     CheckBox tvPurchased;
 
+    @FXML
+    ListView shoppingList;
 
     @Autowired
     GameBoardController(ClientModel clientModel) {
@@ -85,28 +94,24 @@ public class GameBoardController implements Initializable {
         System.out.println("Játékosok: " + Arrays.toString(clientModel.getPlayers().stream().map(
                 p -> "Index: " + p.getIndex()).toArray()));
         System.out.println("Soronlévő játékos: " + clientModel.getCurrentPlayer().getIndex());
+//        shoppingList.setCellFactory(param -> new ListCell<java.util.Map.Entry<Item, Boolean>>() {
+//            @Override
+//            protected void updateItem(Entry<Item, Boolean> item, boolean empty) {
+//                super.updateItem(item, empty);
+//
+//                setText(item.getKey().toString());
+//                
+//            }
+//        });
 
-
-        startRound();
+        displayPlayerInfo(clientModel.getCurrentPlayer());
     }
 
-    private void startRound() {
-        displayPlayerInfo();
-    }
-
-    private void displayPlayerInfo() {
-        Player currentPlayer = clientModel.getCurrentPlayer();
+    private void displayPlayerInfo(Player currentPlayer) {
         playerColor.setText("Játékos " + clientModel.getCurrentPlayer().getIndex());
         balance.setText(currentPlayer.getBankBalance() + "");
         fieldIndex.setText(currentPlayer.getPosition() + "");
         setWinningCriteriaIndicators(currentPlayer);
-    }
-
-    @FXML
-    public void endRoundAction(ActionEvent event) {
-        System.out.println("kör vége");
-        clientModel.switchPlayer();
-        startRound();
     }
 
     private void setWinningCriteriaIndicators(Player player) {
@@ -137,17 +142,20 @@ public class GameBoardController implements Initializable {
     public void GameStepped(GameSteppedEvent event) {
         if (event.getSource().equals(clientModel)) {
             //Todo react, refresh the view!
+            System.out.println("Game stepped.. by" + event.getCurrentPlayer().getIndex());
+            displayPlayerInfo(event.getCurrentPlayer());
         }
     }
 
     public void stepGame(javafx.event.ActionEvent actionEvent) {
         clientModel.stepGame();
-        displayPlayerInfo();
     }
 
     @FXML
     public void turnOverRequest(javafx.event.ActionEvent actionEvent) {
         clientModel.switchPlayer();
+        displayPlayerInfo(clientModel.getCurrentPlayer());
+        shoppingList.setItems(null);
     }
 
     @EventListener
@@ -175,7 +183,18 @@ public class GameBoardController implements Initializable {
     @EventListener
     public void BuyItems(BuyEvent event) {
         if (event.getSource().equals(clientModel)) {
-            System.out.println("Vasarolsz most !");
+            System.out.println("Vasarolsz most az alábbiak közül!");
+            System.out.println(Arrays.toString(event.getPurchaseAble().keySet().toArray()));
+            System.out.println("valuek:" + Arrays.toString(event.getPurchaseAble().values().toArray()));
+            Map<Item, Boolean> purchaseableItems = event.getPurchaseAble();
+            ObservableList<String> shoppingListItems = FXCollections.observableArrayList(
+                purchaseableItems.entrySet()
+                    .stream()
+                    .filter(e -> !e.getValue())
+                    .map(e -> e.getKey().toString())
+                    .collect(Collectors.toList())
+            );
+            shoppingList.setItems(shoppingListItems);
         }
     }
 }
