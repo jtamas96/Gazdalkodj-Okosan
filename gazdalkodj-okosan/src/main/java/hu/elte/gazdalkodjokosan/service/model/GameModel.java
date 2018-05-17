@@ -4,6 +4,7 @@ import hu.elte.gazdalkodjokosan.data.Field;
 import hu.elte.gazdalkodjokosan.data.Player;
 import hu.elte.gazdalkodjokosan.data.SaleItem;
 import hu.elte.gazdalkodjokosan.data.cards.CardListener;
+import hu.elte.gazdalkodjokosan.data.cards.FortuneCardEnum;
 import hu.elte.gazdalkodjokosan.data.enums.Item;
 import hu.elte.gazdalkodjokosan.events.BuyEvent;
 import hu.elte.gazdalkodjokosan.events.GameSteppedEvent;
@@ -21,11 +22,12 @@ import java.util.function.Consumer;
 @Component
 public class GameModel implements CardListener {
 
+    private final ApplicationEventPublisher publisher;
     private List<Player> players;
     private List<Field> table;
     private Player currentPlayer;
-    private final ApplicationEventPublisher publisher;
     private Player lastStepped;
+    private List<FortuneCardEnum> fortuneCardDeck;
 
     @Autowired
     public GameModel(ApplicationEventPublisher publisher) {
@@ -46,13 +48,19 @@ public class GameModel implements CardListener {
             for (int i = 1; i < 42; i++) {
                 table.add(new Field(i, new ArrayList<>()));
             }
+            fortuneCardDeck = new ArrayList<>();
+            fortuneCardDeck.addAll(Arrays.asList(FortuneCardEnum.values()));
+            fortuneCardDeck.forEach(card -> {
+                card.addListener(this);
+            });
+            Collections.shuffle(fortuneCardDeck);
         } else {
             throw new PlayerNumberException("Invalid number of players.");
         }
     }
 
     public void stepGame() {
-        if(currentPlayer.equals(lastStepped)) return;
+        if (currentPlayer.equals(lastStepped)) return;
 
         lastStepped = currentPlayer;
         int immobilized = currentPlayer.getImmobilized();
@@ -112,7 +120,7 @@ public class GameModel implements CardListener {
     }
 
     public void switchPlayer() {
-        if(! currentPlayer.equals(lastStepped)){
+        if (!currentPlayer.equals(lastStepped)) {
             publisher.publishEvent(new MessageEvent(this, "Még nem dobtál!"));
             return;
         }
@@ -127,6 +135,9 @@ public class GameModel implements CardListener {
 
     private void runFieldEffect(int position) {
         Map<Item, Boolean> itemsMap = new HashMap<>();
+        int lastCard;
+        FortuneCardEnum fc;
+
         switch (position) {
             case 1:
                 writeMessage("Kézi csomózású perzsaszőnyegekkel díszíted lakásod. Fizess 30.000 Ft-ot!");
@@ -145,7 +156,10 @@ public class GameModel implements CardListener {
             case 32:
             case 37:
                 writeMessage("Húzz egy Szerencsekerék kártyát, és kövesd annak utasításait!");
-                //Todo szerencsekártya húzás
+                lastCard = FortuneCardEnum.values().length - 1;
+                fc = fortuneCardDeck.get(lastCard);
+                shiftDeck();
+                fc.notifyListeners();
                 break;
             case 4:
                 writeMessage("Szereted az izgalmas rejtvényeket, ezért Füles magazin előfizetést vásároltál. Fizess 6000 Ft-t!");
@@ -169,11 +183,17 @@ public class GameModel implements CardListener {
                 break;
             case 9:
                 writeMessage("A GENERALI-nál megkötheted gyermekjövő élet- 180.000 Ft / év, Nyugdíj – 180.000 Ft / év, Házőrző lakás lakás- 300.000 Ft / év és Casco biztosításodat 50 000 Ft / év összegért.");
-                //Todo biztosítás event
+                boolean hasChildInsurance = GameModel.itemPurchased(currentPlayer.getItems(), "GYERMEK_JOVO");
+                boolean hasHouseInsurance = GameModel.itemPurchased(currentPlayer.getItems(), "HAZORZO_BISZT");
+                boolean hasCascoInsurance = GameModel.itemPurchased(currentPlayer.getItems(), "CASCO_BISZT");
+                itemsMap.put(Item.GYERMEK_JOVO, hasChildInsurance);
+                itemsMap.put(Item.HAZORZO_BISZT, hasHouseInsurance);
+                itemsMap.put(Item.CASCO_BISZT, hasCascoInsurance);
+                publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
                 break;
             case 11:
-                if(currentPlayer.isWithHouse() && currentPlayer.getBankBalance() >= 300000){
-                    writeMessage("Ha van pénzed és lakásod, vásárolj modern konyhabútort. Fizess 300.000 Ft-ot!");
+                writeMessage("Ha van pénzed és lakásod, vásárolj modern konyhabútort. Fizess 300.000 Ft-ot!");
+                if (currentPlayer.isWithHouse() && currentPlayer.getBankBalance() >= 300000) {
                     boolean hasFurniture = GameModel.itemPurchased(currentPlayer.getItems(), "KONYHA_BUTOR");
                     itemsMap.put(Item.KONYHA_BUTOR, hasFurniture);
                     publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
@@ -212,7 +232,10 @@ public class GameModel implements CardListener {
             case 20:
                 writeMessage("Sportszereket vásároltál a DECATHLON Sportáruházban az akciós termékekből, 25000 Ft-ot kell fizetned. Vásárlás után sportoltál is, ezért jutalmul húzz egy Szerencsekerék kártyát!");
                 playerUpdateFunction(player -> player.setBankBalance((player.getBankBalance() - 25000)));
-                //Todo kártya húzás event
+                lastCard = FortuneCardEnum.values().length - 1;
+                fc = fortuneCardDeck.get(lastCard);
+                shiftDeck();
+                fc.notifyListeners();
                 break;
             case 21:
                 writeMessage("Pihenj Siófok Balaton parti mediterrán szállodájában, a Hotel Azúrban! A háromnapos pihenésedért fizess 90 000 Ft-ot!");
@@ -234,7 +257,10 @@ public class GameModel implements CardListener {
                 break;
             case 27:
                 writeMessage("Tömegközlekedést vettél igénybe, lemondtál a kényelmedről. Húzz egy Szerencsekerék kártyát, es kövesd annak utasításait!");
-                //Todo szerencsekártya event
+                int last = FortuneCardEnum.values().length - 1;
+                fc = fortuneCardDeck.get(last);
+                shiftDeck();
+                fc.notifyListeners();
                 break;
             case 29:
                 writeMessage("Sétálj a Halászbástyán! Innen gyönyörű kilátás nyílik Budapestre.");
@@ -270,8 +296,8 @@ public class GameModel implements CardListener {
                 playerUpdateFunction(player -> player.setBankBalance((player.getBankBalance() - 5000)));
                 break;
             case 38:
-                if(currentPlayer.isWithHouse()){
-                    writeMessage("Ha már van lakásod most vásárolhatsz bele szobabútort. A szobabútor ára 900000 Ft.");
+                writeMessage("Ha már van lakásod most vásárolhatsz bele szobabútort. A szobabútor ára 900000 Ft.");
+                if (currentPlayer.isWithHouse()) {
                     boolean hasFurniture = GameModel.itemPurchased(currentPlayer.getItems(), "SZOBA_BUTOR");
                     itemsMap.put(Item.SZOBA_BUTOR, hasFurniture);
                     publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
@@ -334,6 +360,13 @@ public class GameModel implements CardListener {
         return list.stream().filter(i -> i.name.equals(itemName))
                 .findFirst().orElseGet(() -> new SaleItem(Item.valueOf(itemName)))
                 .isPurchased();
+    }
+
+    private void shiftDeck() {
+        int last = FortuneCardEnum.values().length - 1;
+        FortuneCardEnum fc = fortuneCardDeck.get(last);
+        fortuneCardDeck.remove(last);
+        fortuneCardDeck.add(0, fc);
     }
 
     @Override
