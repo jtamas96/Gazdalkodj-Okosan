@@ -8,6 +8,7 @@ package hu.elte.gazdalkodjokosan.service;
 import hu.elte.gazdalkodjokosan.common.transfer.*;
 import hu.elte.gazdalkodjokosan.data.Field;
 import hu.elte.gazdalkodjokosan.data.Player;
+import hu.elte.gazdalkodjokosan.data.enums.Item;
 
 import java.util.List;
 
@@ -25,11 +26,7 @@ public interface BoardService {
     public void stepGame();
     public BoardResponse<Player> getPlayer(int playerIndex);
     public BoardResponse<Player> getCurrentPlayer();
-    public BoardResponse<String> buyCar(int playerIndex, boolean loan);
-    public BoardResponse<String> buyHouse(int playerIndex, boolean loan);
-    public BoardResponse<String> buyInsurance(int playerIndex, Insurance insurance);
-    public BoardResponse<String> buyHouseAsset(int playerIndex, HouseAsset houseAsset);
-    public BoardResponse<String> buyBKVPass(int playerIndex);
+    public BoardResponse<List<Item>> buyItems(List<Item> itemList); //TODO: hitelezheto targyak? majd azt is át kell adni.
 
     public List<Field> getTable();
 }

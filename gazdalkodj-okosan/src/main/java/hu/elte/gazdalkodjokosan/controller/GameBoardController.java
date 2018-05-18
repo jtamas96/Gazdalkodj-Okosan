@@ -5,6 +5,7 @@
  */
 package hu.elte.gazdalkodjokosan.controller;
 
+import hu.elte.gazdalkodjokosan.common.transfer.BoardResponse;
 import hu.elte.gazdalkodjokosan.common.transfer.Insurance;
 import hu.elte.gazdalkodjokosan.data.Player;
 import hu.elte.gazdalkodjokosan.data.enums.Item;
@@ -14,12 +15,12 @@ import hu.elte.gazdalkodjokosan.events.MessageEvent;
 import hu.elte.gazdalkodjokosan.events.UpdatePlayerEvent;
 import hu.elte.gazdalkodjokosan.model.ClientModel;
 import hu.elte.gazdalkodjokosan.view.StageManager;
-import javafx.event.ActionEvent;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.util.Duration;
 import org.controlsfx.control.Notifications;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,15 +29,9 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.ResourceBundle;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
 
 /**
  * FXML Controller class
@@ -48,7 +43,8 @@ public class GameBoardController implements Initializable {
 
     ClientModel clientModel;
 
-    @Autowired @Lazy
+    @Autowired
+    @Lazy
     StageManager stageManager;
 
     @FXML
@@ -78,7 +74,10 @@ public class GameBoardController implements Initializable {
     CheckBox tvPurchased;
 
     @FXML
-    ListView shoppingList;
+    ListView<Map.Entry<Item, Integer>> shoppingList;
+
+    @FXML
+    public Button buyItems;
 
     @Autowired
     GameBoardController(ClientModel clientModel) {
@@ -104,6 +103,7 @@ public class GameBoardController implements Initializable {
 //            }
 //        });
 
+        shoppingList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         displayPlayerInfo(clientModel.getCurrentPlayer());
     }
 
@@ -167,7 +167,7 @@ public class GameBoardController implements Initializable {
                     .text(event.getMessage())
                     .graphic(null)
                     .hideAfter(Duration.seconds(7))
-                    .position(Pos.BASELINE_RIGHT);
+                    .position(Pos.TOP_RIGHT);
             notiBuilder.showInformation();
 
         }
@@ -187,14 +187,33 @@ public class GameBoardController implements Initializable {
             System.out.println(Arrays.toString(event.getPurchaseAble().keySet().toArray()));
             System.out.println("valuek:" + Arrays.toString(event.getPurchaseAble().values().toArray()));
             Map<Item, Boolean> purchaseableItems = event.getPurchaseAble();
-            ObservableList<String> shoppingListItems = FXCollections.observableArrayList(
-                purchaseableItems.entrySet()
-                    .stream()
-                    .filter(e -> !e.getValue())
-                    .map(e -> e.getKey().toString())
-                    .collect(Collectors.toList())
+            ObservableList<Map.Entry<Item, Integer>> shoppingListItems = FXCollections.observableArrayList(
+                    purchaseableItems.keySet()
+                            .stream()
+                            .collect(Collectors.toMap(Function.identity(), Item::getCost))
+                            .entrySet()
             );
             shoppingList.setItems(shoppingListItems);
+            buyItems.setDisable(false);
         }
+    }
+
+    @FXML
+    public void buyItemButton(javafx.event.ActionEvent actionEvent) {
+        ObservableList<Map.Entry<Item, Integer>> selectedItems = shoppingList.getSelectionModel().getSelectedItems();
+        System.out.println("User selected: ");
+        selectedItems.forEach(System.out::println);
+        BoardResponse<List<Item>> listBoardResponse = clientModel.buyItems(
+                selectedItems.stream()
+                        .map(Map.Entry::getKey)
+                        .collect(Collectors.toList())
+        );
+        if(listBoardResponse.isActionSuccessful()){
+            System.out.println("Sikeres vasarlas");
+        }else{
+            System.out.println("Tul sok mindent szedtel ossze.");
+        }
+        shoppingList.setItems(FXCollections.observableArrayList(new HashSet<>()));
+        buyItems.setDisable(true);
     }
 }

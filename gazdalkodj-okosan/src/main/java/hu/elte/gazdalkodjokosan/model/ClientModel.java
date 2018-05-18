@@ -1,7 +1,9 @@
 package hu.elte.gazdalkodjokosan.model;
 
+import hu.elte.gazdalkodjokosan.common.transfer.BoardResponse;
 import hu.elte.gazdalkodjokosan.data.Field;
 import hu.elte.gazdalkodjokosan.data.Player;
+import hu.elte.gazdalkodjokosan.data.enums.Item;
 import hu.elte.gazdalkodjokosan.events.BuyEvent;
 import hu.elte.gazdalkodjokosan.events.GameSteppedEvent;
 import hu.elte.gazdalkodjokosan.events.MessageEvent;
@@ -50,7 +52,11 @@ public class ClientModel {
     public void switchPlayer(){
         currentPlayer = persistence.switchPlayer(currentPlayer.getIndex());
     }
-    
+
+    public BoardResponse<List<Item>> buyItems(List<Item> itemsToPurchase){
+        return persistence.buyItems(itemsToPurchase);
+    }
+
     @EventListener
     public void GameStepped(GameSteppedEvent event) {
         if (event.getSource().equals(persistence)) {
