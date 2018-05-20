@@ -30,11 +30,11 @@ public class StageManager {
     
     private void show(final Parent rootnode, String title) {
         Scene scene = prepareScene(rootnode);
-        
         primaryStage.setTitle(title);
         primaryStage.setScene(scene);
         primaryStage.sizeToScene();
         primaryStage.centerOnScreen();
+        
         
         try {
             primaryStage.show();

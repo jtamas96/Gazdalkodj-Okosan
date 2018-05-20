@@ -1,322 +1,145 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.effect.Reflection?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="TOP_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="635.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hu.elte.gazdalkodjokosan.controller.GameBoardController">
+<VBox fx:id="mainWrap" alignment="TOP_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" stylesheets="@../styles/gameboard.css" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hu.elte.gazdalkodjokosan.controller.GameBoardController">
    <children>
-      <Label fx:id="playerColor" text="Játékos">
-         <VBox.margin>
-            <Insets top="20.0" />
-         </VBox.margin>
-         <font>
-            <Font size="14.0" />
-         </font></Label>
-      <BorderPane maxWidth="-Infinity" prefHeight="400.0" prefWidth="840.0">
+      <BorderPane maxWidth="-Infinity">
          <top>
-            <HBox alignment="BOTTOM_CENTER" prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-               <children>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-               </children>
-            </HBox>
+            <HBox alignment="BOTTOM_CENTER" BorderPane.alignment="CENTER" />
          </top>
          <bottom>
-            <HBox alignment="TOP_CENTER" prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+            <VBox alignment="TOP_CENTER" BorderPane.alignment="CENTER">
                <children>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
+                  <HBox fx:id="egyenlegWrap" alignment="TOP_CENTER">
+                     <children>
+                        <Label text="Egyenleg:" textFill="WHITE">
+                           <font>
+                              <Font name="Arial Narrow Bold" size="18.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="balance" text="0" textFill="WHITE">
+                           <HBox.margin>
+                              <Insets left="10.0" />
+                           </HBox.margin>
+                           <font>
+                              <Font name="Arial Narrow Bold" size="18.0" />
+                           </font>
+                        </Label>
+                     </children>
+                     <padding>
+                        <Insets bottom="3.0" top="3.0" />
+                     </padding>
+                  </HBox>
+                  <Pane prefHeight="135.0" prefWidth="764.0">
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                     <children>
+                        <ImageView fx:id="playerIndicator" fitHeight="92.0" fitWidth="91.0" layoutY="26.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/misc/pawn_3d_big.png" />
+                           </image>
+                        </ImageView>
+                        <VBox alignment="TOP_CENTER" layoutX="617.0" layoutY="10.0" prefWidth="133.0">
+                           <children>
+                              <ListView fx:id="shoppingList" prefHeight="82.0" prefWidth="133.0">
+                                 <VBox.margin>
+                                    <Insets />
+                                 </VBox.margin>
+                                 <effect>
+                                    <Reflection />
+                                 </effect>
+                              </ListView>
+                              <Button fx:id="buyItems" disable="true" mnemonicParsing="false" onAction="#buyItemButton" text="Megveszem">
+                                 <VBox.margin>
+                                    <Insets top="10.0" />
+                                 </VBox.margin>
+                              </Button>
+                           </children>
+                        </VBox>
+                        <ListView fx:id="purchasedList" layoutX="91.0" layoutY="21.0" prefHeight="100.0" prefWidth="133.0">
+                           <effect>
+                              <DropShadow color="#c90b0b" height="68.44" radius="32.2375" width="62.51" />
+                           </effect>
+                        </ListView>
+                        <Label fx:id="message" layoutX="278.0" layoutY="26.0" maxHeight="100.0" maxWidth="250.0" minHeight="100.0" minWidth="250.0" prefHeight="100.0" prefWidth="250.0" textFill="WHITE">
+                           <font>
+                              <Font name="Arial Narrow Bold Italic" size="14.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </Pane>
                </children>
-            </HBox>
+               <BorderPane.margin>
+                  <Insets top="30.0" />
+               </BorderPane.margin>
+            </VBox>
          </bottom>
          <left>
-            <VBox alignment="CENTER_LEFT" prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
-               <children>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-               </children>
-            </VBox>
+            <VBox alignment="CENTER_LEFT" BorderPane.alignment="CENTER" />
          </left>
          <right>
-            <VBox alignment="CENTER_RIGHT" prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
-               <children>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="150.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sample.jpg" />
-                     </image>
-                  </ImageView>
-               </children>
-            </VBox>
+            <VBox alignment="CENTER_RIGHT" BorderPane.alignment="CENTER" />
          </right>
          <center>
-            <VBox BorderPane.alignment="CENTER">
+            <Pane fx:id="gameBoard" prefHeight="550.0" prefWidth="764.0" BorderPane.alignment="CENTER">
                <children>
-                  <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
-                     <children>
-                        <Label text="Vásárlás: " />
-                        <ListView fx:id="shoppingList" prefHeight="200.0" prefWidth="200.0">
-                           <HBox.margin>
-                              <Insets bottom="10.0" top="10.0" />
-                           </HBox.margin>
-                        </ListView>
-                        <Button fx:id="buyItems" disable="true" mnemonicParsing="false" onAction="#buyItemButton" text="Vétel" />
-                     </children>
-                  </HBox>
-                  <HBox prefHeight="45.0" prefWidth="640.0">
-                     <children>
-                        <Label text="Mező:" />
-                        <Label fx:id="fieldIndex" text="0">
-                           <HBox.margin>
-                              <Insets left="10.0" />
-                           </HBox.margin></Label>
-                     </children></HBox>
-                  <HBox prefHeight="57.0" prefWidth="640.0">
-                     <children>
-                        <Label text="Egyenleg:" />
-                        <Label fx:id="balance" text="0">
-                           <HBox.margin>
-                              <Insets left="10.0" />
-                           </HBox.margin>
-                        </Label>
-                     </children></HBox>
-                  <HBox alignment="TOP_CENTER" prefHeight="100.0" prefWidth="200.0">
-                     <children>
-                        <CheckBox fx:id="housePurchased" disable="true" mnemonicParsing="false" text="Lakás" />
-                        <CheckBox fx:id="carPurchased" disable="true" mnemonicParsing="false" text="Autó" />
-                        <CheckBox fx:id="carInsurancePurchased" disable="true" mnemonicParsing="false" text="Biztosítás autóra" />
-                        <CheckBox fx:id="kitchenFurniturePurchased" disable="true" mnemonicParsing="false" text="Konyhabútor" />
-                        <CheckBox fx:id="roomFurniturePurchased" disable="true" mnemonicParsing="false" text="Szobabútor" />
-                        <CheckBox fx:id="washingMachinePurchased" disable="true" mnemonicParsing="false" text="Mosógép" />
-                        <CheckBox fx:id="fridgePurchased" disable="true" mnemonicParsing="false" text="Hűtőszekrény" />
-                        <CheckBox fx:id="stovePurchased" disable="true" mnemonicParsing="false" text="Sütő" />
-                        <CheckBox fx:id="tvPurchased" disable="true" mnemonicParsing="false" text="TV" />
-                     </children>
-                  </HBox>
+                  <Button fx:id="stepButton" layoutX="162.0" layoutY="359.0" mnemonicParsing="false" onAction="#stepGame" text="Dobás">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </Button>
+                  <Button fx:id="turnOver" layoutX="236.0" layoutY="359.0" mnemonicParsing="false" onAction="#turnOverRequest" text="Kör Vége">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </Button>
+                  <ImageView fx:id="pawn1" fitHeight="35.0" fitWidth="35.0" layoutX="681.0" layoutY="117.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/misc/pawn_3d.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fx:id="pawn2" fitHeight="35.0" fitWidth="35.0" layoutX="14.0" layoutY="391.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/misc/pawn_3d.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fx:id="pawn3" fitHeight="35.0" fitWidth="35.0" layoutX="46.0" layoutY="494.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/misc/pawn_3d.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fx:id="pawn4" fitHeight="35.0" fitWidth="35.0" layoutX="681.0" layoutY="123.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/misc/pawn_3d.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fx:id="pawn5" fitHeight="35.0" fitWidth="35.0" layoutX="663.0" layoutY="484.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/misc/pawn_3d.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fx:id="pawn6" fitHeight="35.0" fitWidth="35.0" layoutX="693.0" layoutY="445.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/misc/pawn_3d.png" />
+                     </image>
+                  </ImageView>
                </children>
-            </VBox>
+            </Pane>
          </center>
       </BorderPane>
-      <Button fx:id="stepButton" mnemonicParsing="false" onAction="#stepGame" text="Dobás">
-         <VBox.margin>
-            <Insets bottom="10.0" />
-         </VBox.margin></Button>
-      <Button fx:id="turnOver" mnemonicParsing="false" onAction="#turnOverRequest" text="Kör Vége">
-         <VBox.margin>
-            <Insets bottom="10.0" />
-         </VBox.margin></Button>
    </children>
 </VBox>

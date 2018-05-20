@@ -7,6 +7,8 @@ package hu.elte.gazdalkodjokosan.controller;
 
 import hu.elte.gazdalkodjokosan.common.transfer.BoardResponse;
 import hu.elte.gazdalkodjokosan.common.transfer.Insurance;
+import hu.elte.gazdalkodjokosan.common.transfer.PlayerColor;
+import hu.elte.gazdalkodjokosan.controller.consts.PawnPosition;
 import hu.elte.gazdalkodjokosan.data.Player;
 import hu.elte.gazdalkodjokosan.data.enums.Item;
 import hu.elte.gazdalkodjokosan.events.BuyEvent;
@@ -32,6 +34,8 @@ import java.net.URL;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 /**
  * FXML Controller class
@@ -48,33 +52,32 @@ public class GameBoardController implements Initializable {
     StageManager stageManager;
 
     @FXML
-    Label playerColor;
-    @FXML
     Label balance;
     @FXML
-    Label fieldIndex;
-
+    ImageView pawn1;
     @FXML
-    CheckBox housePurchased;
+    ImageView pawn2;
     @FXML
-    CheckBox carPurchased;
+    ImageView pawn3;
     @FXML
-    CheckBox carInsurancePurchased;
+    ImageView pawn4;
     @FXML
-    CheckBox kitchenFurniturePurchased;
+    ImageView pawn5;
     @FXML
-    CheckBox roomFurniturePurchased;
+    ImageView pawn6;
     @FXML
-    CheckBox washingMachinePurchased;
-    @FXML
-    CheckBox fridgePurchased;
-    @FXML
-    CheckBox stovePurchased;
-    @FXML
-    CheckBox tvPurchased;
+    Label message;
 
     @FXML
     ListView<Map.Entry<Item, Integer>> shoppingList;
+    
+    @FXML
+    ListView<String> purchasedList;
+
+    @FXML
+    ImageView playerIndicator;
+    
+    List<ImageView> pawnList;
 
     @FXML
     public Button buyItems;
@@ -88,56 +91,65 @@ public class GameBoardController implements Initializable {
      * Initializes the controller class.
      */
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        // set messageLabel
+        message.setWrapText(true);
+        // set shoppingList
+        shoppingList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        // map players and colors
+        pawnList = new ArrayList<ImageView>(Arrays.asList(pawn1, pawn2, pawn3, pawn4, pawn5, pawn6));
+        pawnList.forEach(pawn -> pawn.setVisible(false));
+        clientModel.getPlayers().forEach(player -> {
+            // get pawn for player
+            ImageView pawn = pawnList.get(player.getIndex());
+            // set color
+            pawn.setImage(new Image("/images/board_pawn_" +
+                (PlayerColor.values()[player.getIndex()]).toString().toLowerCase() + ".png")
+            );
+            // set visible
+            pawn.setVisible(true);
+            movePawn(player);
+        });
+        // debug
         System.out.println("Játékosok száma: " + clientModel.getPlayers().size());
         System.out.println("Játékosok: " + Arrays.toString(clientModel.getPlayers().stream().map(
                 p -> "Index: " + p.getIndex()).toArray()));
         System.out.println("Soronlévő játékos: " + clientModel.getCurrentPlayer().getIndex());
-//        shoppingList.setCellFactory(param -> new ListCell<java.util.Map.Entry<Item, Boolean>>() {
-//            @Override
-//            protected void updateItem(Entry<Item, Boolean> item, boolean empty) {
-//                super.updateItem(item, empty);
-//
-//                setText(item.getKey().toString());
-//                
-//            }
-//        });
-
-        shoppingList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        // display info for current player
         displayPlayerInfo(clientModel.getCurrentPlayer());
     }
 
     private void displayPlayerInfo(Player currentPlayer) {
-        playerColor.setText("Játékos " + clientModel.getCurrentPlayer().getIndex());
+        movePawn(currentPlayer);
         balance.setText(currentPlayer.getBankBalance() + "");
-        fieldIndex.setText(currentPlayer.getPosition() + "");
-        setWinningCriteriaIndicators(currentPlayer);
+        populatePurchasedList(currentPlayer);
+        setPlayerIndicator(currentPlayer);
     }
-
-    private void setWinningCriteriaIndicators(Player player) {
-        indicateOwnership(housePurchased, player.isWithHouse());
-        indicateOwnership(carPurchased, player.isWithCar());
-        indicateOwnership(carInsurancePurchased, player.getInsurances().contains(Insurance.CAR));
-        indicateOwnership(kitchenFurniturePurchased, player.getItems().contains(Item.KONYHA_BUTOR));
-        indicateOwnership(roomFurniturePurchased, player.getItems().contains(Item.KONYHA_BUTOR));
-        indicateOwnership(washingMachinePurchased, true);
-        indicateOwnership(fridgePurchased, true);
-        indicateOwnership(stovePurchased, true);
-        indicateOwnership(tvPurchased, player.getItems().contains(Item.TV));
+    
+    private void setPlayerIndicator(Player currentPlayer) {
+        playerIndicator.setImage(new Image("/images/indicator_pawn_" + 
+            (PlayerColor.values()[currentPlayer.getIndex()]).toString().toLowerCase() + ".png")
+        );
     }
-
-    private void indicateOwnership(CheckBox checkBox, boolean value) {
-
-        if (value) {
-            checkBox.setStyle("-fx-opacity: 1");
-            checkBox.setSelected(true);
-        } else {
-            checkBox.setDisable(true);
-            //checkBox.setSelected(false);
-            // TODO
-        }
+    
+    private void movePawn(Player currentPlayer) {
+        int index = currentPlayer.getIndex();
+        ImageView playerPawn = pawnList.get(index);
+        int position = currentPlayer.getPosition();
+        playerPawn.setLayoutX(PawnPosition.calcX(position, index));
+        playerPawn.setLayoutY(PawnPosition.calcY(position, index));
     }
-
+    
+    private void populatePurchasedList(Player currentPlayer) {
+        ObservableList<String> purchasedItems = FXCollections.observableArrayList(
+            currentPlayer.getItems().stream()
+                .filter(i -> i.isPurchased())
+                .map(i -> i.getName()).collect(Collectors.toList()
+            )
+        );
+        purchasedList.setItems(purchasedItems);
+    }
+    
     @EventListener
     public void GameStepped(GameSteppedEvent event) {
         if (event.getSource().equals(clientModel)) {
@@ -156,20 +168,13 @@ public class GameBoardController implements Initializable {
         clientModel.switchPlayer();
         displayPlayerInfo(clientModel.getCurrentPlayer());
         shoppingList.setItems(null);
+        message.setText("");
     }
 
     @EventListener
     public void SendMessage(MessageEvent event) {
         if (event.getSource().equals(clientModel)) {
-            //Todo react
-            Notifications notiBuilder = Notifications.create()
-                    .title("Gazdalkodj okosan!")
-                    .text(event.getMessage())
-                    .graphic(null)
-                    .hideAfter(Duration.seconds(7))
-                    .position(Pos.TOP_RIGHT);
-            notiBuilder.showInformation();
-
+            message.setText(event.getMessage());
         }
     }
 
@@ -215,5 +220,6 @@ public class GameBoardController implements Initializable {
         }
         shoppingList.setItems(FXCollections.observableArrayList(new HashSet<>()));
         buyItems.setDisable(true);
+        populatePurchasedList(clientModel.getCurrentPlayer());
     }
 }
