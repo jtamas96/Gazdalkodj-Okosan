@@ -86,7 +86,7 @@ public class ClientModel {
     @EventListener
     public void BuyItems(BuyEvent event){
         if(event.getSource().equals(persistence)){
-            publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getPurchaseAble()));
+            publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getItemPrices()));
         }
     }
 }

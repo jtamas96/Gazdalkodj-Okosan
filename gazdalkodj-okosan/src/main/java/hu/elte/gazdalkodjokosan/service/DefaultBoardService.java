@@ -79,10 +79,14 @@ public class DefaultBoardService implements BoardService {
 //                return new BoardResponse<>("You want more than one from: " + item.name() + " ?", false, null);
 
                 int bankBalance = currentPlayer.getBankBalance();
-                if (bankBalance >= item.getCost()) {
-                    currentPlayer.setBankBalance(bankBalance - item.getCost());
+                int currentPrice = currentItem.cost - currentItem.getReducedPriceWith();
+                if (bankBalance >= currentPrice) {
+                    currentPlayer.setBankBalance(bankBalance - currentPrice);
 
                     currentItem.purchase();
+                    if(item.insurrance){
+                        currentPlayer.getInsurances().add(item);
+                    }
                     purchasedNow.add(item);
                 } else {
                     notEnoughMoneyFor.add(item);
@@ -143,7 +147,7 @@ public class DefaultBoardService implements BoardService {
     @EventListener
     public void BuyItems(BuyEvent event) {
         if (event.getSource().equals(model)) {
-            publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getPurchaseAble()));
+            publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getItemPrices()));
         }
     }
 }

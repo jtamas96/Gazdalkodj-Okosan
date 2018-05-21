@@ -1,6 +1,5 @@
 package hu.elte.gazdalkodjokosan.data;
 
-import hu.elte.gazdalkodjokosan.common.transfer.Insurance;
 import hu.elte.gazdalkodjokosan.data.enums.Item;
 
 import java.util.HashSet;
@@ -19,7 +18,7 @@ public class Player {
     private boolean withHouse;
     private boolean withCar;
     private boolean withBKVPass;
-    private final Set<Insurance> insurances;
+    private final Set<Item> insurances;
     private int immobilized;
 
     public Player(int bankBalance, int debt, int position, int index, List<SaleItem> items) {
@@ -92,7 +91,7 @@ public class Player {
         return withBKVPass;
     }
 
-    public Set<Insurance> getInsurances() {
+    public Set<Item> getInsurances() {
         return insurances;
     }
 

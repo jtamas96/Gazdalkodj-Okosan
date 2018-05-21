@@ -8,12 +8,15 @@ import java.util.List;
 public class SaleItem { // A mutable representation of Items for each user.
 
     public String name;
+    public int cost;
     private boolean available = false;
     boolean purchased = false;
+
     int reducedPriceWith = 0;
 
     public SaleItem(Item item) {
         name = item.name();
+        cost = item.getCost();
     }
 
     public String getName() {
@@ -42,6 +45,10 @@ public class SaleItem { // A mutable representation of Items for each user.
 
     public boolean isPurchased() {
         return purchased;
+    }
+
+    public int getReducedPriceWith() {
+        return reducedPriceWith;
     }
 
     public static List<SaleItem> getInitialListForUser() {
