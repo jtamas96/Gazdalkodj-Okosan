@@ -8,6 +8,8 @@ package hu.elte.gazdalkodjokosan.controller;
 import hu.elte.gazdalkodjokosan.GazdalkodjOkosanApplication;
 import hu.elte.gazdalkodjokosan.model.ClientModel;
 import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNumberException;
+import hu.elte.gazdalkodjokosan.view.FxmlView;
+import hu.elte.gazdalkodjokosan.view.StageManager;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -25,8 +27,7 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 /**
@@ -38,8 +39,11 @@ import org.springframework.stereotype.Component;
 public class StarterController implements Initializable {
     Parent parent;
 
-    // BoardService boardService;
-    ClientModel clientModel;
+    public ClientModel clientModel;
+    @Autowired @Lazy
+    StageManager stageManager;
+
+
     @FXML
     private ToggleGroup playerNum;
 
@@ -53,7 +57,6 @@ public class StarterController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // TODO
     }
 
     @FXML
@@ -63,21 +66,11 @@ public class StarterController implements Initializable {
             String value = selectedRadioButton.getText();
 
             clientModel.newGame(Integer.parseInt(value));
+            stageManager.switchScene(FxmlView.BOARD);
         } catch (PlayerNumberException ex) {
            //Now the client UI protects from invalid values!
             //TODO: Error handling in other contexts.
         }
-        URL gameBoardFxml = getClass().getResource("/fxml/GameBoard.fxml");
-
-        FXMLLoader loader = new FXMLLoader(gameBoardFxml);
-        loader.setControllerFactory(GazdalkodjOkosanApplication.context::getBean);
-        parent = loader.load();
-        Scene scene = new Scene(parent);
-
-        Stage window = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        window.setScene(scene);
-        window.centerOnScreen();
-        window.show();
     }
 
 }

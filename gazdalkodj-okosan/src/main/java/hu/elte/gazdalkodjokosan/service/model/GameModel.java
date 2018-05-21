@@ -68,7 +68,7 @@ public class GameModel implements CardListener {
             currentPlayer.setImmobilized(immobilized - 1);
         } else {
             Random random = new Random();
-            int step = random.nextInt(6) + 1;
+            int step = 1;//random.nextInt(6) + 1;
             stepForward(step);
             System.out.println("Game stepped. Current player at field: " + currentPlayer.getPosition());
         }
@@ -338,8 +338,9 @@ public class GameModel implements CardListener {
             table.get(nextPosition).addPlayer(currentPlayer);
             currentPlayer.setPosition(nextPosition);
         }
-        publisher.publishEvent(new GameSteppedEvent(this, currentPlayer, table));
+
         runFieldEffect(currentPlayer.getPosition());
+        publisher.publishEvent(new GameSteppedEvent(this, currentPlayer, table));
     }
 
     @Override

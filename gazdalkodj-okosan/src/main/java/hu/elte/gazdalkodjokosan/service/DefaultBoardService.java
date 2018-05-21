@@ -1,23 +1,24 @@
 package hu.elte.gazdalkodjokosan.service;
 
-import hu.elte.gazdalkodjokosan.common.transfer.*;
+import hu.elte.gazdalkodjokosan.common.transfer.BoardResponse;
 import hu.elte.gazdalkodjokosan.data.Field;
-import hu.elte.gazdalkodjokosan.events.BuyEvent;
-import hu.elte.gazdalkodjokosan.service.model.GameModel;
 import hu.elte.gazdalkodjokosan.data.Player;
 import hu.elte.gazdalkodjokosan.data.SaleItem;
 import hu.elte.gazdalkodjokosan.data.enums.Item;
+import hu.elte.gazdalkodjokosan.events.BuyEvent;
 import hu.elte.gazdalkodjokosan.events.GameSteppedEvent;
 import hu.elte.gazdalkodjokosan.events.MessageEvent;
 import hu.elte.gazdalkodjokosan.events.UpdatePlayerEvent;
-import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNotFoundException;
 import hu.elte.gazdalkodjokosan.model.exceptions.PlayerNumberException;
-
-import java.util.List;
+import hu.elte.gazdalkodjokosan.service.model.GameModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class DefaultBoardService implements BoardService {
@@ -66,51 +67,36 @@ public class DefaultBoardService implements BoardService {
     }
 
     @Override
-    public BoardResponse<String> buyCar(int playerIndex, boolean loan) {
-        try {
-            Player player = model.getCurrentPlayer();
+    public BoardResponse<List<Item>> buyItems(List<Item> itemList) {
+        Player currentPlayer = model.getCurrentPlayer();
 
-            List<SaleItem> items = model.getItemsOfUser(playerIndex);
-            boolean hasCar = GameModel.itemPurchased(items, "AUTO");
-            if (hasCar) {
-                return new BoardResponse<>("You want more than one?", false, "");
-            }
-            if (player.getIndex() != playerIndex) {
-                return new BoardResponse<>("Not your turn bro!", false, "");
-            }
+        List<Item> purchasedNow = new ArrayList<>();
+        List<Item> notEnoughMoneyFor = new ArrayList<>();
+        for (Item item : itemList) {
 
-            int carCost = Item.AUTO.getCost();
-            int bankBalance = player.getBankBalance();
-            if (bankBalance >= carCost) {
-                player.setBankBalance(bankBalance - carCost);
-                return new BoardResponse<>("", true, "SUCCESS");
-            } else {
-                return new BoardResponse<>("Not enough money at your packet!", false, "");
-            }
+            SaleItem currentItem = currentPlayer.getItem(item).get(); //TODO: What if not found?
+            if (! currentItem.isPurchased()) {
+//                return new BoardResponse<>("You want more than one from: " + item.name() + " ?", false, null);
 
-        } catch (PlayerNotFoundException e) {
-            return new BoardResponse<>("Not Found player: " + playerIndex, false, "");
+                int bankBalance = currentPlayer.getBankBalance();
+                if (bankBalance >= item.getCost()) {
+                    currentPlayer.setBankBalance(bankBalance - item.getCost());
+
+                    currentItem.purchase();
+                    purchasedNow.add(item);
+                } else {
+                    notEnoughMoneyFor.add(item);
+                }
+            }
         }
-    }
-
-    @Override
-    public BoardResponse buyHouse(int playerIndex, boolean loan) {
-        return null;
-    }
-
-    @Override
-    public BoardResponse buyInsurance(int playerIndex, Insurance insurance) {
-        return null;
-    }
-
-    @Override
-    public BoardResponse buyHouseAsset(int playerIndex, HouseAsset houseAsset) {
-        return null;
-    }
-
-    @Override
-    public BoardResponse buyBKVPass(int playerIndex) {
-        return null;
+        String notEnoughMoneyForString = "You dont have money for these: " + String.join(
+                ",",
+                notEnoughMoneyFor.stream().map(Enum::toString).collect(Collectors.toList()));
+        if (purchasedNow.size() > 0) {
+            return new BoardResponse<>(notEnoughMoneyForString, true, purchasedNow);
+        } else {
+            return new BoardResponse<>(notEnoughMoneyForString, false, purchasedNow);
+        }
     }
 
     @Override
@@ -155,8 +141,8 @@ public class DefaultBoardService implements BoardService {
     }
 
     @EventListener
-    public void BuyItems(BuyEvent event){
-        if(event.getSource().equals(model)){
+    public void BuyItems(BuyEvent event) {
+        if (event.getSource().equals(model)) {
             publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getPurchaseAble()));
         }
     }

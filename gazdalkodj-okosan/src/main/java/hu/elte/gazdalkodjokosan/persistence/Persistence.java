@@ -3,6 +3,7 @@ package hu.elte.gazdalkodjokosan.persistence;
 import hu.elte.gazdalkodjokosan.common.transfer.BoardResponse;
 import hu.elte.gazdalkodjokosan.data.Field;
 import hu.elte.gazdalkodjokosan.data.Player;
+import hu.elte.gazdalkodjokosan.data.enums.Item;
 import hu.elte.gazdalkodjokosan.events.BuyEvent;
 import hu.elte.gazdalkodjokosan.events.GameSteppedEvent;
 import hu.elte.gazdalkodjokosan.events.MessageEvent;
@@ -73,6 +74,11 @@ public class Persistence implements IPersistence {
             System.out.println("Error:" + resp.getErrorMessage());
         }
         return null;
+    }
+
+    @Override
+    public BoardResponse<List<Item>> buyItems(List<Item> itemsToPurchase) {
+        return boardService.buyItems(itemsToPurchase);
     }
 
     @EventListener
