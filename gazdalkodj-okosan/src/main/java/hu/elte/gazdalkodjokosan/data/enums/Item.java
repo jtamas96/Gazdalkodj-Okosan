@@ -14,9 +14,7 @@ public enum Item {
     TV(70000, false, true, null, null, null),
     MOSOGEP(90000, false, true, null, null, null),
     HUTO(80000, false, true, null, null, null),
-    SUTO(70000, false, true, null, null, null),
-    // TODO: illetve mik is kellenek a nyeréshez?
-
+    SUTO(70000, false, true, null, null, null)
     ;
 
     private int cost;
