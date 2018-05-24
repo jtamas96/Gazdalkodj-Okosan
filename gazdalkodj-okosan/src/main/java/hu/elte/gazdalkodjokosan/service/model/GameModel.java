@@ -227,7 +227,7 @@ public class GameModel implements CardListener {
                 break;
             case 15:
                 writeMessage("Jegy nélkül utaztál az autóbuszon, 6 000 Ft büntetést fizetsz! Ha van bérleted, a büntetést most megúsztad.");
-                if (currentPlayer.isWithBKVPass()) {
+                if (!currentPlayer.isWithBKVPass()) {
                     playerUpdateFunction(player -> player.setBankBalance((player.getBankBalance() - 6000)));
                 }
                 break;
