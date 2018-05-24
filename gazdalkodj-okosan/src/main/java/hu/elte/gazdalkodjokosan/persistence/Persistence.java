@@ -105,7 +105,7 @@ public class Persistence implements IPersistence {
     @EventListener
     public void BuyItems(BuyEvent event){
         if(event.getSource().equals(boardService)){
-            publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getPurchaseAble()));
+            publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getItemPrices()));
         }
     }
 }
