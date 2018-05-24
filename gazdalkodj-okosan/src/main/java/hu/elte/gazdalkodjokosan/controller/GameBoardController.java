@@ -67,7 +67,7 @@ public class GameBoardController implements Initializable {
     Label message;
 
     @FXML
-    ListView<Map.Entry<Item, Integer>> shoppingList;
+    ListView<Map.Entry<String, Integer>> shoppingList;
 
     @FXML
     ListView<String> purchasedList;
@@ -189,15 +189,10 @@ public class GameBoardController implements Initializable {
     public void BuyItems(BuyEvent event) {
         if (event.getSource().equals(clientModel)) {
             System.out.println("Vasarolsz most az alábbiak közül!");
-            System.out.println(Arrays.toString(event.getPurchaseAble().keySet().toArray()));
-            System.out.println("valuek:" + Arrays.toString(event.getPurchaseAble().values().toArray()));
-            Map<Item, Boolean> purchaseableItems = event.getPurchaseAble();
-            ObservableList<Map.Entry<Item, Integer>> shoppingListItems = FXCollections.observableArrayList(
-                    purchaseableItems.keySet()
-                            .stream()
-                            .collect(Collectors.toMap(Function.identity(), Item::getCost))
-                            .entrySet()
-            );
+            System.out.println(Arrays.toString(event.getItemPrices().keySet().toArray()));
+            System.out.println("valuek:" + Arrays.toString(event.getItemPrices().values().toArray()));
+            Map<String, Integer> purchaseableItems = event.getItemPrices();
+            ObservableList<Map.Entry<String, Integer>> shoppingListItems = FXCollections.observableArrayList(purchaseableItems.entrySet());
             shoppingList.setItems(shoppingListItems);
             buyItems.setDisable(false);
         }
@@ -205,12 +200,17 @@ public class GameBoardController implements Initializable {
 
     @FXML
     public void buyItemButton(javafx.event.ActionEvent actionEvent) {
-        ObservableList<Map.Entry<Item, Integer>> selectedItems = shoppingList.getSelectionModel().getSelectedItems();
+        ObservableList<Map.Entry<String, Integer>> selectedItems = shoppingList.getSelectionModel().getSelectedItems();
+        if (selectedItems.size() == 0) {
+            return;
+        }
+
         System.out.println("User selected: ");
         selectedItems.forEach(System.out::println);
         BoardResponse<List<Item>> listBoardResponse = clientModel.buyItems(
                 selectedItems.stream()
                         .map(Map.Entry::getKey)
+                        .map(Item::valueOf)
                         .collect(Collectors.toList())
         );
         if (listBoardResponse.isActionSuccessful()) {

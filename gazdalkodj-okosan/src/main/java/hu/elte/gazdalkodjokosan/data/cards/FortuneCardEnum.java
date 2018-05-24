@@ -1,6 +1,5 @@
 package hu.elte.gazdalkodjokosan.data.cards;
 
-import hu.elte.gazdalkodjokosan.common.transfer.Insurance;
 import hu.elte.gazdalkodjokosan.data.SaleItem;
 import hu.elte.gazdalkodjokosan.data.enums.Item;
 
@@ -62,7 +61,7 @@ public enum FortuneCardEnum implements FortuneCard {
             cl.writeMessage("[Szerencse 7]. Gyermeked felvételt nyert az egyetemre. Ha van Generali Gyermekjövő Programod kapsz 5 millió Ft-ot, melyet a Biztosító a folyószámládra helyez.");
             cl.playerUpdateFunction(player -> {
                 int money = player.getBankBalance();
-                if (player.getInsurances().contains(Insurance.CHILD)) {
+                if (player.getInsurances().contains(Item.GYERMEK_JOVO)) {
                     player.setBankBalance(money + 5000000);
                 }
             });
@@ -94,6 +93,7 @@ public enum FortuneCardEnum implements FortuneCard {
                 Optional<SaleItem> optSi = player.getItem(Item.TV);
                 optSi.ifPresent(saleItem -> saleItem.reducePriceWith(10000));
             });
+            cl.stepOnBoard(40);
         }
     },
 
@@ -103,7 +103,7 @@ public enum FortuneCardEnum implements FortuneCard {
             cl.playerUpdateFunction(player -> {
                 Optional<SaleItem> optSi = player.getItem(Item.SZOBA_BUTOR);
                 optSi.ifPresent(saleItem -> {
-                    if (saleItem.isPurchased()) {
+                    if (saleItem.isPurchased() || !player.isWithHouse()) {
                         player.setBankBalance(player.getBankBalance() + Item.SZOBA_BUTOR.getCost());
                     } else {
                         saleItem.purchase();
@@ -117,7 +117,7 @@ public enum FortuneCardEnum implements FortuneCard {
         public void notify(CardListener cl) {
             cl.writeMessage("[Szerencse 12]. Kiégett a lakásod! Vissza kell adnod a berendezési tárgyaidat! Ha van Generali Házőrző lakásbiztosításod a biztosító kifizeti a károdat. Ha nincs akkor, ha legközelebb a 9-es mezőre lépsz, kösd meg lakásbiztosításodat.");
             cl.playerUpdateFunction(player -> {
-                if (!player.getInsurances().contains(Insurance.HOUSE)) {
+                if (!player.getInsurances().contains(Item.HAZORZO_BISZT)) {
                     List<Item> berendezes = Arrays.asList(Item.KONYHA_BUTOR, Item.SZOBA_BUTOR, Item.MOSOGEP, Item.SUTO, Item.HUTO, Item.TV);
                     for (Item item : berendezes) {
                         Optional<SaleItem> optSi = player.getItem(item);

@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -55,6 +56,7 @@ public class GameModel implements CardListener {
             }
             fortuneCardDeck = new ArrayList<>();
             fortuneCardDeck.addAll(Arrays.asList(FortuneCardEnum.values()));
+
             fortuneCardDeck.forEach(card -> {
                 card.addListener(this);
             });
@@ -103,7 +105,7 @@ public class GameModel implements CardListener {
         boolean hasAllMandatory = items.stream()
                 .filter(userItem -> Item.valueOf(userItem.name).getMandatory())
                 .allMatch(SaleItem::isPurchased);
-        return hasAllMandatory && player.getBankBalance() >= 600000;
+        return hasAllMandatory && player.getBankBalance() >= 600000 && player.getDebt() == 0;
     }
 
     public List<SaleItem> getItemsOfUser(int playerIndex) throws PlayerNotFoundException {
@@ -126,7 +128,7 @@ public class GameModel implements CardListener {
         try {
             if (gameOver) {
                 return;
-            }         
+            }
             if (!currentPlayer.equals(lastStepped)) {
                 publisher.publishEvent(new MessageEvent(this, "Még nem dobtál!"));
                 return;
@@ -176,7 +178,8 @@ public class GameModel implements CardListener {
     }
 
     private void runFieldEffect(int position) {
-        Map<Item, Boolean> itemsMap = new HashMap<>();
+        Map<String, Integer> priceMap = new HashMap<>();
+        Map<String, Map.Entry<Boolean, Integer>> itemNamePriceMap;
         int lastCard;
         FortuneCardEnum fc;
 
@@ -187,8 +190,11 @@ public class GameModel implements CardListener {
                 break;
             case 2:
                 writeMessage("Megvásárolhatod éves bérletedet 9.000 Ft-ért a BKV-nál. Ha már van bérleted, a BKV mezőin (2-es, 15-ös, 27-es) nem kell többet fizetned.");
-                itemsMap.put(Item.BKV_BERLET, currentPlayer.isWithBKVPass());
-                publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
+                Map.Entry<Boolean, Integer> bkvItemData = GameModel.itemPurchasable(currentPlayer.getItems(), Item.BKV_BERLET.name());
+                if (bkvItemData.getKey()) {
+                    priceMap.put(Item.BKV_BERLET.name(), bkvItemData.getValue());
+                }
+                publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
                 break;
             case 3:
             case 10:
@@ -209,8 +215,11 @@ public class GameModel implements CardListener {
                 break;
             case 5:
                 writeMessage("Megveheted az Ivanicstól a legújabb Volvo modellt egy összegben vagy részletre.");
-                itemsMap.put(Item.AUTO, currentPlayer.isWithCar());
-                publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
+                Map.Entry<Boolean, Integer> carItemData = GameModel.itemPurchasable(currentPlayer.getItems(), Item.AUTO.name());
+                if (carItemData.getKey()) {
+                    priceMap.put(Item.AUTO.name(), carItemData.getValue());
+                }
+                publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
                 break;
             case 6:
                 writeMessage("Jól kihasználtad a REGIO játékkereskedés akcióit. Vásárlásodért most csak 5.000 Ft- kell fizetned!");
@@ -221,24 +230,30 @@ public class GameModel implements CardListener {
                 break;
             case 8:
                 writeMessage("7 % kamatjóváírásban, részesülsz, amikor ezen a mezőn áthaladsz, vagy rálépsz.");
-                playerUpdateFunction(player -> player.setBankBalance((int) (player.getBankBalance() * 0.7)));
+                playerUpdateFunction(player -> player.setBankBalance((int) (player.getBankBalance() * 1.07)));
                 break;
             case 9:
                 writeMessage("A GENERALI-nál megkötheted gyermekjövő élet- 180.000 Ft / év, Nyugdíj – 180.000 Ft / év, Házőrző lakás lakás- 300.000 Ft / év és Casco biztosításodat 50 000 Ft / év összegért.");
-                boolean hasChildInsurance = GameModel.itemPurchased(currentPlayer.getItems(), "GYERMEK_JOVO");
-                boolean hasHouseInsurance = GameModel.itemPurchased(currentPlayer.getItems(), "HAZORZO_BISZT");
-                boolean hasCascoInsurance = GameModel.itemPurchased(currentPlayer.getItems(), "CASCO_BISZT");
-                itemsMap.put(Item.GYERMEK_JOVO, hasChildInsurance);
-                itemsMap.put(Item.HAZORZO_BISZT, hasHouseInsurance);
-                itemsMap.put(Item.CASCO_BISZT, hasCascoInsurance);
-                publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
+                itemNamePriceMap = new HashMap<>();
+                itemNamePriceMap.put(Item.GYERMEK_JOVO.name(), GameModel.itemPurchasable(currentPlayer.getItems(), Item.GYERMEK_JOVO.name()));
+                itemNamePriceMap.put(Item.HAZORZO_BISZT.name(), GameModel.itemPurchasable(currentPlayer.getItems(), Item.HAZORZO_BISZT.name()));
+                itemNamePriceMap.put(Item.CASCO_BISZT.name(), GameModel.itemPurchasable(currentPlayer.getItems(), Item.CASCO_BISZT.name()));
+                for (String key : itemNamePriceMap.keySet()) {
+                    Map.Entry<Boolean, Integer> itemData = itemNamePriceMap.get(key);
+                    if (itemData.getKey()) {
+                        priceMap.put(key, itemData.getValue());
+                    }
+                }
+                publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
                 break;
             case 11:
                 writeMessage("Ha van pénzed és lakásod, vásárolj modern konyhabútort. Fizess 300.000 Ft-ot!");
                 if (currentPlayer.isWithHouse() && currentPlayer.getBankBalance() >= 300000) {
-                    boolean hasFurniture = GameModel.itemPurchased(currentPlayer.getItems(), "KONYHA_BUTOR");
-                    itemsMap.put(Item.KONYHA_BUTOR, hasFurniture);
-                    publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
+                    Map.Entry<Boolean, Integer> furnitureItemData = GameModel.itemPurchasable(currentPlayer.getItems(), Item.KONYHA_BUTOR.name());
+                    if (furnitureItemData.getKey()) {
+                        priceMap.put(Item.KONYHA_BUTOR.name(), furnitureItemData.getValue());
+                    }
+                    publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
                 }
                 break;
             case 12:
@@ -268,8 +283,11 @@ public class GameModel implements CardListener {
                 break;
             case 19:
                 writeMessage("Takarékoskodj, mert így szép lakáshoz juthatsz. Ha van pénzed, fizess be 9.500.000 Ft-ot az OTP BANK pénztárába és megkapod a lakásod. Amennyiben részletfizetésre van csak lehetőséged, fizess 2.000.000 Ft-ot A fennmaradó 9.000.000 Ft-ot pedig 90.000 Ft-os részletekben törlesztheted.");
-                itemsMap.put(Item.LAKAS, currentPlayer.isWithHouse());
-                publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
+                Map.Entry<Boolean, Integer> houseItemData = GameModel.itemPurchasable(currentPlayer.getItems(), Item.LAKAS.name());
+                if (houseItemData.getKey()) {
+                    priceMap.put(Item.LAKAS.name(), houseItemData.getValue());
+                }
+                publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
                 break;
             case 20:
                 writeMessage("Sportszereket vásároltál a DECATHLON Sportáruházban az akciós termékekből, 25000 Ft-ot kell fizetned. Vásárlás után sportoltál is, ezért jutalmul húzz egy Szerencsekerék kártyát!");
@@ -317,13 +335,17 @@ public class GameModel implements CardListener {
                 break;
             case 33:
                 writeMessage("Ha van pénzed. Vásárolj elektromos gépeket; hűtőszekrény, mosógépet, sütőt!");
-                boolean hasWashMach = GameModel.itemPurchased(currentPlayer.getItems(), "MOSOGEP");
-                boolean hasRefrig = GameModel.itemPurchased(currentPlayer.getItems(), "HUTO");
-                boolean hasOven = GameModel.itemPurchased(currentPlayer.getItems(), "SUTO");
-                itemsMap.put(Item.MOSOGEP, hasWashMach);
-                itemsMap.put(Item.HUTO, hasRefrig);
-                itemsMap.put(Item.SUTO, hasOven);
-                publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
+                itemNamePriceMap = new HashMap<>();
+                itemNamePriceMap.put(Item.MOSOGEP.name(), GameModel.itemPurchasable(currentPlayer.getItems(), Item.MOSOGEP.name()));
+                itemNamePriceMap.put(Item.HUTO.name(), GameModel.itemPurchasable(currentPlayer.getItems(), Item.HUTO.name()));
+                itemNamePriceMap.put(Item.SUTO.name(), GameModel.itemPurchasable(currentPlayer.getItems(), Item.SUTO.name()));
+                for (String key : itemNamePriceMap.keySet()) {
+                    Map.Entry<Boolean, Integer> itemData = itemNamePriceMap.get(key);
+                    if (itemData.getKey()) {
+                        priceMap.put(key, itemData.getValue());
+                    }
+                }
+                publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
                 break;
             case 34:
                 writeMessage("Beléptél a KIKA áruházba! Konyhafelszerelésért fizess 40.000 Ft-ot!");
@@ -339,22 +361,27 @@ public class GameModel implements CardListener {
                 break;
             case 38:
                 writeMessage("Ha már van lakásod most vásárolhatsz bele szobabútort. A szobabútor ára 900000 Ft.");
-                if (currentPlayer.isWithHouse()) {
-                    boolean hasFurniture = GameModel.itemPurchased(currentPlayer.getItems(), "SZOBA_BUTOR");
-                    itemsMap.put(Item.SZOBA_BUTOR, hasFurniture);
-                    publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
+                Map.Entry<Boolean, Integer> furnitureData = GameModel.itemPurchasable(currentPlayer.getItems(), Item.SZOBA_BUTOR.name());
+                if (currentPlayer.isWithHouse() && furnitureData.getKey()) {
+                    priceMap.put(Item.SZOBA_BUTOR.name(), furnitureData.getValue());
+                    publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
                 }
                 break;
             case 39:
                 writeMessage("Takarékoskodj, mert így szép lakáshoz juthatsz. Ha van pénzed, fizess be 9.500.000 Ft-ot az OTP BANK pénztárába, és megkapod a lakásod. Amennyiben részletfizetésre van csak lehetőséged, fizess 2.000.000 Ft-ot! A fennmaradó 9.000000 Ft-ot pedig 90.000 Ft-os részletekben törlesztheted.");
-                itemsMap.put(Item.LAKAS, currentPlayer.isWithHouse());
-                publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
+                Map.Entry<Boolean, Integer> houseItemData2 = GameModel.itemPurchasable(currentPlayer.getItems(), Item.LAKAS.name());
+                if (houseItemData2.getKey()) {
+                    priceMap.put(Item.LAKAS.name(), houseItemData2.getValue());
+                }
+                publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
                 break;
             case 40:
                 writeMessage("Az EURONICS Műszaki Áruházában minőséget vásárolhatsz olcsón. Most vedd meg a televíziód! Fizess 70.000 Ft-ot!");
-                boolean hasTV = GameModel.itemPurchased(currentPlayer.getItems(), "TV");
-                itemsMap.put(Item.TV, hasTV);
-                publisher.publishEvent(new BuyEvent(this, currentPlayer, itemsMap));
+                Map.Entry<Boolean, Integer> tvItemData = GameModel.itemPurchasable(currentPlayer.getItems(), Item.TV.name());
+                if (tvItemData.getKey()) {
+                    priceMap.put(Item.TV.name(), tvItemData.getValue());
+                }
+                publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
                 break;
             case 41:
                 writeMessage("A Lufthansa kényelmes és gyors utazást biztosít Európa nagyvárosaiba. A Repülőjegyed ára 60.000 Ft.");
@@ -399,10 +426,21 @@ public class GameModel implements CardListener {
         runFieldEffect(position);
     }
 
-    public static boolean itemPurchased(List<SaleItem> list, String itemName) {
-        return list.stream().filter(i -> i.name.equals(itemName))
-                .findFirst().orElseGet(() -> new SaleItem(Item.valueOf(itemName)))
-                .isPurchased();
+    private static Map.Entry<Boolean, Integer> itemPurchasable(List<SaleItem> list, String itemName) {
+        Map<String, String> preconditions = new HashMap<>();
+        preconditions.put(Item.CASCO_BISZT.name(), Item.AUTO.name());
+        preconditions.put(Item.HAZORZO_BISZT.name(), Item.LAKAS.name());
+
+        SaleItem sItem = list.stream().filter(i -> i.name.equals(itemName))
+                .findFirst().orElseGet(() -> new SaleItem(Item.valueOf(itemName)));
+        boolean purchasable = !sItem.isPurchased();
+        if (preconditions.containsKey(itemName)) {
+            String requiredItem = preconditions.get(itemName);
+            SaleItem required = list.stream().filter(i -> i.name.equals(requiredItem))
+                    .findFirst().orElseGet(() -> new SaleItem(Item.valueOf(requiredItem)));
+            purchasable = purchasable && required.isPurchased();
+        }
+        return new SimpleEntry<>(purchasable, sItem.cost - sItem.getReducedPriceWith());
     }
 
     private void shiftDeck() {

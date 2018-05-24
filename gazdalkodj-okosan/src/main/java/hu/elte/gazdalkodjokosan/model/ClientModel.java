@@ -89,7 +89,7 @@ public class ClientModel {
     @EventListener
     public void BuyItems(BuyEvent event) {
         if (event.getSource().equals(persistence)) {
-            publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getPurchaseAble()));
+            publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getItemPrices()));
         }
     }
 
@@ -100,7 +100,7 @@ public class ClientModel {
             gameOver = true;
         }
     }
-    
+
     public boolean isGameOver() {
         return gameOver;
     }
