@@ -20,6 +20,7 @@ public class Player {
     private boolean withBKVPass;
     private final Set<Item> insurances;
     private int immobilized;
+    private boolean loser;
 
     public Player(int bankBalance, int debt, int position, int index, List<SaleItem> items) {
         this.bankBalance = bankBalance;
@@ -33,6 +34,7 @@ public class Player {
         withBKVPass = false;
         insurances = new HashSet<>();
         immobilized = 0;
+        loser = false;
     }
 
     public int getBankBalance() {
@@ -70,11 +72,11 @@ public class Player {
     public boolean isWinner() {
         return winner;
     }
-    
+
     public int getImmobilized() {
         return immobilized;
     }
-    
+
     public void setImmobilized(int rounds) {
         immobilized = rounds;
     }
@@ -95,9 +97,21 @@ public class Player {
         return insurances;
     }
 
-    public Optional<SaleItem> getItem(Item it){
+    public Optional<SaleItem> getItem(Item it) {
         return items.stream()
                 .filter(item -> item.name.equals(it.name()))
                 .findFirst();
+    }
+
+    public void setWinner(boolean winner) {
+        this.winner = winner;
+    }
+
+    public boolean isLoser() {
+        return loser;
+    }
+
+    public void setLoser(boolean loser) {
+        this.loser = loser;
     }
 }

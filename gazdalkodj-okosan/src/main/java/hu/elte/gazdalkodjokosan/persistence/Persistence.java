@@ -5,6 +5,7 @@ import hu.elte.gazdalkodjokosan.data.Field;
 import hu.elte.gazdalkodjokosan.data.Player;
 import hu.elte.gazdalkodjokosan.data.enums.Item;
 import hu.elte.gazdalkodjokosan.events.BuyEvent;
+import hu.elte.gazdalkodjokosan.events.GameOverEvent;
 import hu.elte.gazdalkodjokosan.events.GameSteppedEvent;
 import hu.elte.gazdalkodjokosan.events.MessageEvent;
 import hu.elte.gazdalkodjokosan.events.UpdatePlayerEvent;
@@ -66,11 +67,11 @@ public class Persistence implements IPersistence {
     }
 
     @Override
-    public Player switchPlayer(int currentPlayerIndex){
+    public Player switchPlayer(int currentPlayerIndex) {
         BoardResponse<Player> resp = boardService.switchToNextPlayer(currentPlayerIndex);
-        if(resp.isActionSuccessful()){
+        if (resp.isActionSuccessful()) {
             return resp.getValue();
-        }else{
+        } else {
             System.out.println("Error:" + resp.getErrorMessage());
         }
         return null;
@@ -103,9 +104,16 @@ public class Persistence implements IPersistence {
     }
 
     @EventListener
-    public void BuyItems(BuyEvent event){
-        if(event.getSource().equals(boardService)){
+    public void BuyItems(BuyEvent event) {
+        if (event.getSource().equals(boardService)) {
             publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getItemPrices()));
+        }
+    }
+
+    @EventListener
+    public void GameOver(GameOverEvent event) {
+        if (event.getSource().equals(boardService)) {
+            publisher.publishEvent(new GameOverEvent(this, event.getWinners()));
         }
     }
 }

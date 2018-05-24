@@ -7,6 +7,7 @@ import hu.elte.gazdalkodjokosan.data.cards.CardListener;
 import hu.elte.gazdalkodjokosan.data.cards.FortuneCardEnum;
 import hu.elte.gazdalkodjokosan.data.enums.Item;
 import hu.elte.gazdalkodjokosan.events.BuyEvent;
+import hu.elte.gazdalkodjokosan.events.GameOverEvent;
 import hu.elte.gazdalkodjokosan.events.GameSteppedEvent;
 import hu.elte.gazdalkodjokosan.events.MessageEvent;
 import hu.elte.gazdalkodjokosan.events.UpdatePlayerEvent;
@@ -19,6 +20,8 @@ import org.springframework.stereotype.Component;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Component
 public class GameModel implements CardListener {
@@ -29,10 +32,12 @@ public class GameModel implements CardListener {
     private Player currentPlayer;
     private Player lastStepped;
     private List<FortuneCardEnum> fortuneCardDeck;
+    private boolean gameOver;
 
     @Autowired
     public GameModel(ApplicationEventPublisher publisher) {
         this.publisher = publisher;
+        gameOver = false;
     }
 
     public void newGame(int playerNumber) throws PlayerNumberException {
@@ -62,18 +67,15 @@ public class GameModel implements CardListener {
     }
 
     public void stepGame() {
-        if (currentPlayer.equals(lastStepped)) return;
+        if (gameOver || currentPlayer.equals(lastStepped)) {
+            return;
+        }
 
         lastStepped = currentPlayer;
-        int immobilized = currentPlayer.getImmobilized();
-        if (immobilized > 0) {
-            currentPlayer.setImmobilized(immobilized - 1);
-        } else {
-            Random random = new Random();
-            int step = 1; //random.nextInt(6) + 1;
-            stepForward(step);
-            System.out.println("Game stepped. Current player at field: " + currentPlayer.getPosition());
-        }
+        Random random = new Random();
+        int step = random.nextInt(6) + 1;
+        stepForward(step);
+        System.out.println("Game stepped. Current player at field: " + currentPlayer.getPosition());
     }
 
     private void playerSteppedOnStart(boolean exact) {
@@ -93,10 +95,12 @@ public class GameModel implements CardListener {
         return currentPlayer;
     }
 
-    public boolean isGameOverForPlayer(int playerIndex) throws PlayerNotFoundException {
-        Player player = getPlayer(playerIndex);
+    public boolean isGameOverForPlayer(Player player) {
+        return player.getBankBalance() < 0;
+    }
 
-        List<SaleItem> items = getItemsOfUser(playerIndex);
+    public boolean isPlayerWinner(Player player) throws PlayerNotFoundException {
+        List<SaleItem> items = getItemsOfUser(player.getIndex());
 
         boolean hasAllMandatory = items.stream()
                 .filter(userItem -> Item.valueOf(userItem.name).getMandatory())
@@ -113,7 +117,6 @@ public class GameModel implements CardListener {
         Optional<Player> optPlayer = players.stream()
                 .filter(p -> p.getIndex() == playerIndex)
                 .findFirst();
-
         if (optPlayer.isPresent()) {
             return optPlayer.get();
         } else {
@@ -122,17 +125,56 @@ public class GameModel implements CardListener {
     }
 
     public void switchPlayer() {
-        if (!currentPlayer.equals(lastStepped)) {
-            publisher.publishEvent(new MessageEvent(this, "Még nem dobtál!"));
-            return;
+        try {
+            if (gameOver) {
+                return;
+            }
+            if (!currentPlayer.equals(lastStepped)) {
+                publisher.publishEvent(new MessageEvent(this, "Még nem dobtál!"));
+                return;
+            }
+            if (isPlayerWinner(currentPlayer)) {
+                currentPlayer.setWinner(true);
+            } else if (isGameOverForPlayer(currentPlayer)) {
+                currentPlayer.setLoser(true);
+            }
+            if (!isGameOver()) {
+                int newPlayersIndex = (currentPlayer.getIndex() + 1) % players.size();
+                currentPlayer = players.get(newPlayersIndex);
+                int immobilized = currentPlayer.getImmobilized();
+                while (immobilized > 0 || isGameOverForPlayer(currentPlayer) || currentPlayer.isWinner()) {
+                    if (immobilized > 0) {
+                        currentPlayer.setImmobilized(immobilized - 1);
+                    }
+                    lastStepped = currentPlayer;
+                    newPlayersIndex = (currentPlayer.getIndex() + 1) % players.size();
+                    currentPlayer = players.get(newPlayersIndex);
+                    immobilized = currentPlayer.getImmobilized();
+                }
+                System.out.println("Switched player. Current player: " + currentPlayer.getIndex());
+            } else {
+                publisher.publishEvent(new GameOverEvent(this, players.stream().filter(Player::isWinner).toArray(Player[]::new)));
+                gameOver = true;
+            }
+        } catch (PlayerNotFoundException ex) {
+            Logger.getLogger(GameModel.class.getName()).log(Level.SEVERE, null, ex);
         }
-        int newPlayersIndex = (currentPlayer.getIndex() + 1) % players.size();
-        currentPlayer = players.get(newPlayersIndex);
-        System.out.println("Switched player. Current player: " + currentPlayer.getIndex());
     }
 
     public List<Player> getPlayers() {
         return players;
+    }
+
+    private boolean isGameOver() {
+        long countOver = players.stream().filter(p -> p.isWinner() || p.isLoser()).count();
+        if (players.size() - countOver <= 1) {
+            Player[] notLosers = players.stream().filter(p -> !p.isLoser()).toArray(Player[]::new);
+            if (notLosers.length == 1) {
+                notLosers[0].setWinner(true);
+            }
+            return true;
+        }
+        return false;
     }
 
     private void runFieldEffect(int position) {
@@ -149,7 +191,7 @@ public class GameModel implements CardListener {
             case 2:
                 writeMessage("Megvásárolhatod éves bérletedet 9.000 Ft-ért a BKV-nál. Ha már van bérleted, a BKV mezőin (2-es, 15-ös, 27-es) nem kell többet fizetned.");
                 Map.Entry<Boolean, Integer> bkvItemData = GameModel.itemPurchasable(currentPlayer.getItems(), Item.BKV_BERLET.name());
-                if(bkvItemData.getKey()){
+                if (bkvItemData.getKey()) {
                     priceMap.put(Item.BKV_BERLET.name(), bkvItemData.getValue());
                 }
                 publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
@@ -174,7 +216,7 @@ public class GameModel implements CardListener {
             case 5:
                 writeMessage("Megveheted az Ivanicstól a legújabb Volvo modellt egy összegben vagy részletre.");
                 Map.Entry<Boolean, Integer> carItemData = GameModel.itemPurchasable(currentPlayer.getItems(), Item.AUTO.name());
-                if(carItemData.getKey()){
+                if (carItemData.getKey()) {
                     priceMap.put(Item.AUTO.name(), carItemData.getValue());
                 }
                 publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
@@ -196,9 +238,9 @@ public class GameModel implements CardListener {
                 itemNamePriceMap.put(Item.GYERMEK_JOVO.name(), GameModel.itemPurchasable(currentPlayer.getItems(), Item.GYERMEK_JOVO.name()));
                 itemNamePriceMap.put(Item.HAZORZO_BISZT.name(), GameModel.itemPurchasable(currentPlayer.getItems(), Item.HAZORZO_BISZT.name()));
                 itemNamePriceMap.put(Item.CASCO_BISZT.name(), GameModel.itemPurchasable(currentPlayer.getItems(), Item.CASCO_BISZT.name()));
-                for(String key: itemNamePriceMap.keySet()){
+                for (String key : itemNamePriceMap.keySet()) {
                     Map.Entry<Boolean, Integer> itemData = itemNamePriceMap.get(key);
-                    if(itemData.getKey()){
+                    if (itemData.getKey()) {
                         priceMap.put(key, itemData.getValue());
                     }
                 }
@@ -208,7 +250,7 @@ public class GameModel implements CardListener {
                 writeMessage("Ha van pénzed és lakásod, vásárolj modern konyhabútort. Fizess 300.000 Ft-ot!");
                 if (currentPlayer.isWithHouse() && currentPlayer.getBankBalance() >= 300000) {
                     Map.Entry<Boolean, Integer> furnitureItemData = GameModel.itemPurchasable(currentPlayer.getItems(), Item.KONYHA_BUTOR.name());
-                    if(furnitureItemData.getKey()){
+                    if (furnitureItemData.getKey()) {
                         priceMap.put(Item.KONYHA_BUTOR.name(), furnitureItemData.getValue());
                     }
                     publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
@@ -242,7 +284,7 @@ public class GameModel implements CardListener {
             case 19:
                 writeMessage("Takarékoskodj, mert így szép lakáshoz juthatsz. Ha van pénzed, fizess be 9.500.000 Ft-ot az OTP BANK pénztárába és megkapod a lakásod. Amennyiben részletfizetésre van csak lehetőséged, fizess 2.000.000 Ft-ot A fennmaradó 9.000.000 Ft-ot pedig 90.000 Ft-os részletekben törlesztheted.");
                 Map.Entry<Boolean, Integer> houseItemData = GameModel.itemPurchasable(currentPlayer.getItems(), Item.LAKAS.name());
-                if(houseItemData.getKey()){
+                if (houseItemData.getKey()) {
                     priceMap.put(Item.LAKAS.name(), houseItemData.getValue());
                 }
                 publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
@@ -297,9 +339,9 @@ public class GameModel implements CardListener {
                 itemNamePriceMap.put(Item.MOSOGEP.name(), GameModel.itemPurchasable(currentPlayer.getItems(), Item.MOSOGEP.name()));
                 itemNamePriceMap.put(Item.HUTO.name(), GameModel.itemPurchasable(currentPlayer.getItems(), Item.HUTO.name()));
                 itemNamePriceMap.put(Item.SUTO.name(), GameModel.itemPurchasable(currentPlayer.getItems(), Item.SUTO.name()));
-                for(String key: itemNamePriceMap.keySet()){
+                for (String key : itemNamePriceMap.keySet()) {
                     Map.Entry<Boolean, Integer> itemData = itemNamePriceMap.get(key);
-                    if(itemData.getKey()){
+                    if (itemData.getKey()) {
                         priceMap.put(key, itemData.getValue());
                     }
                 }
@@ -328,7 +370,7 @@ public class GameModel implements CardListener {
             case 39:
                 writeMessage("Takarékoskodj, mert így szép lakáshoz juthatsz. Ha van pénzed, fizess be 9.500.000 Ft-ot az OTP BANK pénztárába, és megkapod a lakásod. Amennyiben részletfizetésre van csak lehetőséged, fizess 2.000.000 Ft-ot! A fennmaradó 9.000000 Ft-ot pedig 90.000 Ft-os részletekben törlesztheted.");
                 Map.Entry<Boolean, Integer> houseItemData2 = GameModel.itemPurchasable(currentPlayer.getItems(), Item.LAKAS.name());
-                if(houseItemData2.getKey()){
+                if (houseItemData2.getKey()) {
                     priceMap.put(Item.LAKAS.name(), houseItemData2.getValue());
                 }
                 publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
@@ -336,7 +378,7 @@ public class GameModel implements CardListener {
             case 40:
                 writeMessage("Az EURONICS Műszaki Áruházában minőséget vásárolhatsz olcsón. Most vedd meg a televíziód! Fizess 70.000 Ft-ot!");
                 Map.Entry<Boolean, Integer> tvItemData = GameModel.itemPurchasable(currentPlayer.getItems(), Item.TV.name());
-                if(tvItemData.getKey()){
+                if (tvItemData.getKey()) {
                     priceMap.put(Item.TV.name(), tvItemData.getValue());
                 }
                 publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
@@ -391,8 +433,8 @@ public class GameModel implements CardListener {
 
         SaleItem sItem = list.stream().filter(i -> i.name.equals(itemName))
                 .findFirst().orElseGet(() -> new SaleItem(Item.valueOf(itemName)));
-        boolean purchasable = ! sItem.isPurchased();
-        if(preconditions.containsKey(itemName)){
+        boolean purchasable = !sItem.isPurchased();
+        if (preconditions.containsKey(itemName)) {
             String requiredItem = preconditions.get(itemName);
             SaleItem required = list.stream().filter(i -> i.name.equals(requiredItem))
                     .findFirst().orElseGet(() -> new SaleItem(Item.valueOf(requiredItem)));

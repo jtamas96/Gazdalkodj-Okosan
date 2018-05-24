@@ -11,6 +11,7 @@ import hu.elte.gazdalkodjokosan.controller.consts.PawnPosition;
 import hu.elte.gazdalkodjokosan.data.Player;
 import hu.elte.gazdalkodjokosan.data.enums.Item;
 import hu.elte.gazdalkodjokosan.events.BuyEvent;
+import hu.elte.gazdalkodjokosan.events.GameOverEvent;
 import hu.elte.gazdalkodjokosan.events.GameSteppedEvent;
 import hu.elte.gazdalkodjokosan.events.MessageEvent;
 import hu.elte.gazdalkodjokosan.events.UpdatePlayerEvent;
@@ -30,6 +31,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
@@ -66,13 +68,13 @@ public class GameBoardController implements Initializable {
 
     @FXML
     ListView<Map.Entry<String, Integer>> shoppingList;
-    
+
     @FXML
     ListView<String> purchasedList;
 
     @FXML
     ImageView playerIndicator;
-    
+
     List<ImageView> pawnList;
 
     @FXML
@@ -99,8 +101,8 @@ public class GameBoardController implements Initializable {
             // get pawn for player
             ImageView pawn = pawnList.get(player.getIndex());
             // set color
-            pawn.setImage(new Image("/images/board_pawn_" +
-                (PlayerColor.values()[player.getIndex()]).toString().toLowerCase() + ".png")
+            pawn.setImage(new Image("/images/board_pawn_"
+                    + (PlayerColor.values()[player.getIndex()]).toString().toLowerCase() + ".png")
             );
             // set visible
             pawn.setVisible(true);
@@ -121,13 +123,13 @@ public class GameBoardController implements Initializable {
         populatePurchasedList(currentPlayer);
         setPlayerIndicator(currentPlayer);
     }
-    
+
     private void setPlayerIndicator(Player currentPlayer) {
-        playerIndicator.setImage(new Image("/images/indicator_pawn_" + 
-            (PlayerColor.values()[currentPlayer.getIndex()]).toString().toLowerCase() + ".png")
+        playerIndicator.setImage(new Image("/images/indicator_pawn_"
+                + (PlayerColor.values()[currentPlayer.getIndex()]).toString().toLowerCase() + ".png")
         );
     }
-    
+
     private void movePawn(Player currentPlayer) {
         int index = currentPlayer.getIndex();
         ImageView playerPawn = pawnList.get(index);
@@ -135,17 +137,17 @@ public class GameBoardController implements Initializable {
         playerPawn.setLayoutX(PawnPosition.calcX(position, index));
         playerPawn.setLayoutY(PawnPosition.calcY(position, index));
     }
-    
+
     private void populatePurchasedList(Player currentPlayer) {
         ObservableList<String> purchasedItems = FXCollections.observableArrayList(
-            currentPlayer.getItems().stream()
-                .filter(i -> i.isPurchased())
-                .map(i -> i.getName()).collect(Collectors.toList()
-            )
+                currentPlayer.getItems().stream()
+                        .filter(i -> i.isPurchased())
+                        .map(i -> i.getName()).collect(Collectors.toList()
+                )
         );
         purchasedList.setItems(purchasedItems);
     }
-    
+
     @EventListener
     public void GameStepped(GameSteppedEvent event) {
         if (event.getSource().equals(clientModel)) {
@@ -162,9 +164,11 @@ public class GameBoardController implements Initializable {
     @FXML
     public void turnOverRequest(javafx.event.ActionEvent actionEvent) {
         clientModel.switchPlayer();
-        displayPlayerInfo(clientModel.getCurrentPlayer());
-        shoppingList.setItems(null);
-        message.setText("");
+        if (!clientModel.isGameOver()) {
+            displayPlayerInfo(clientModel.getCurrentPlayer());
+            shoppingList.setItems(null);
+            message.setText("");
+        }
     }
 
     @EventListener
@@ -197,7 +201,9 @@ public class GameBoardController implements Initializable {
     @FXML
     public void buyItemButton(javafx.event.ActionEvent actionEvent) {
         ObservableList<Map.Entry<String, Integer>> selectedItems = shoppingList.getSelectionModel().getSelectedItems();
-        if(selectedItems.size() == 0) return;
+        if (selectedItems.size() == 0) {
+            return;
+        }
 
         System.out.println("User selected: ");
         selectedItems.forEach(System.out::println);
@@ -207,13 +213,23 @@ public class GameBoardController implements Initializable {
                         .map(Item::valueOf)
                         .collect(Collectors.toList())
         );
-        if(listBoardResponse.isActionSuccessful()){
-            System.out.println("Sikeres vasarlas");
-        }else{
-            System.out.println("Tul sok mindent szedtel ossze.");
+        if (listBoardResponse.isActionSuccessful()) {
+            shoppingList.getItems().removeAll(selectedItems);
+            if (shoppingList.getItems().isEmpty()) {
+                buyItems.setDisable(true);
+            }
+            populatePurchasedList(clientModel.getCurrentPlayer());
+            message.setText("Sikeres vásárlás");
+        } else {
+            message.setText("Túl sok mindent szedtél össze.");
         }
-        shoppingList.setItems(FXCollections.observableArrayList(new HashSet<>()));
-        buyItems.setDisable(true);
-        populatePurchasedList(clientModel.getCurrentPlayer());
+    }
+
+    @EventListener
+    public void GameOver(GameOverEvent event) {
+        if (event.getSource().equals(clientModel)) {
+            Integer[] ind = Stream.of(event.getWinners()).map(p -> p.getIndex()).toArray(Integer[]::new);
+            message.setText("Vége a játéknak. Győztesek: " + Arrays.toString(ind));
+        }
     }
 }
