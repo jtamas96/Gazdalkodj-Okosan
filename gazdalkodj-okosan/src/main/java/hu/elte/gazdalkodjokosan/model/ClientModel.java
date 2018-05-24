@@ -5,6 +5,7 @@ import hu.elte.gazdalkodjokosan.data.Field;
 import hu.elte.gazdalkodjokosan.data.Player;
 import hu.elte.gazdalkodjokosan.data.enums.Item;
 import hu.elte.gazdalkodjokosan.events.BuyEvent;
+import hu.elte.gazdalkodjokosan.events.GameOverEvent;
 import hu.elte.gazdalkodjokosan.events.GameSteppedEvent;
 import hu.elte.gazdalkodjokosan.events.MessageEvent;
 import hu.elte.gazdalkodjokosan.events.UpdatePlayerEvent;
@@ -24,19 +25,21 @@ public class ClientModel {
     private List<Player> players;
     private Player currentPlayer;
     private final ApplicationEventPublisher publisher;
+    private boolean gameOver;
 
     @Autowired
     public ClientModel(IPersistence persistence, ApplicationEventPublisher publisher) {
         this.persistence = persistence;
         this.publisher = publisher;
+        this.gameOver = false;
     }
 
-    public void newGame(int playerNumber) throws PlayerNumberException {   
+    public void newGame(int playerNumber) throws PlayerNumberException {
         table = persistence.requestNewGame(playerNumber);
         players = persistence.getPlayers();
         currentPlayer = persistence.getCurrentPlayer();
     }
-    
+
     public void stepGame() {
         persistence.requestStep();
     }
@@ -48,12 +51,12 @@ public class ClientModel {
     public Player getCurrentPlayer() {
         return currentPlayer;
     }
-    
-    public void switchPlayer(){
+
+    public void switchPlayer() {
         currentPlayer = persistence.switchPlayer(currentPlayer.getIndex());
     }
 
-    public BoardResponse<List<Item>> buyItems(List<Item> itemsToPurchase){
+    public BoardResponse<List<Item>> buyItems(List<Item> itemsToPurchase) {
         return persistence.buyItems(itemsToPurchase);
     }
 
@@ -84,9 +87,21 @@ public class ClientModel {
     }
 
     @EventListener
-    public void BuyItems(BuyEvent event){
-        if(event.getSource().equals(persistence)){
+    public void BuyItems(BuyEvent event) {
+        if (event.getSource().equals(persistence)) {
             publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getPurchaseAble()));
         }
+    }
+
+    @EventListener
+    public void GameOver(GameOverEvent event) {
+        if (event.getSource().equals(persistence)) {
+            publisher.publishEvent(new GameOverEvent(this, event.getWinners()));
+            gameOver = true;
+        }
+    }
+    
+    public boolean isGameOver() {
+        return gameOver;
     }
 }

@@ -7,6 +7,7 @@ import hu.elte.gazdalkodjokosan.data.cards.CardListener;
 import hu.elte.gazdalkodjokosan.data.cards.FortuneCardEnum;
 import hu.elte.gazdalkodjokosan.data.enums.Item;
 import hu.elte.gazdalkodjokosan.events.BuyEvent;
+import hu.elte.gazdalkodjokosan.events.GameOverEvent;
 import hu.elte.gazdalkodjokosan.events.GameSteppedEvent;
 import hu.elte.gazdalkodjokosan.events.MessageEvent;
 import hu.elte.gazdalkodjokosan.events.UpdatePlayerEvent;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Component
 public class GameModel implements CardListener {
@@ -28,10 +31,12 @@ public class GameModel implements CardListener {
     private Player currentPlayer;
     private Player lastStepped;
     private List<FortuneCardEnum> fortuneCardDeck;
+    private boolean gameOver;
 
     @Autowired
     public GameModel(ApplicationEventPublisher publisher) {
         this.publisher = publisher;
+        gameOver = false;
     }
 
     public void newGame(int playerNumber) throws PlayerNumberException {
@@ -60,18 +65,15 @@ public class GameModel implements CardListener {
     }
 
     public void stepGame() {
-        if (currentPlayer.equals(lastStepped)) return;
+        if (gameOver || currentPlayer.equals(lastStepped)) {
+            return;
+        }
 
         lastStepped = currentPlayer;
-        int immobilized = currentPlayer.getImmobilized();
-        if (immobilized > 0) {
-            currentPlayer.setImmobilized(immobilized - 1);
-        } else {
-            Random random = new Random();
-            int step = 1;//random.nextInt(6) + 1;
-            stepForward(step);
-            System.out.println("Game stepped. Current player at field: " + currentPlayer.getPosition());
-        }
+        Random random = new Random();
+        int step = random.nextInt(6) + 1;
+        stepForward(step);
+        System.out.println("Game stepped. Current player at field: " + currentPlayer.getPosition());
     }
 
     private void playerSteppedOnStart(boolean exact) {
@@ -91,15 +93,17 @@ public class GameModel implements CardListener {
         return currentPlayer;
     }
 
-    public boolean isGameOverForPlayer(int playerIndex) throws PlayerNotFoundException {
-        Player player = getPlayer(playerIndex);
+    public boolean isGameOverForPlayer(Player player) {
+        return player.getBankBalance() < 0;
+    }
 
-        List<SaleItem> items = getItemsOfUser(playerIndex);
+    public boolean isPlayerWinner(Player player) throws PlayerNotFoundException {
+        List<SaleItem> items = getItemsOfUser(player.getIndex());
 
         boolean hasAllMandatory = items.stream()
                 .filter(userItem -> Item.valueOf(userItem.name).getMandatory())
                 .allMatch(SaleItem::isPurchased);
-        return hasAllMandatory && player.getBankBalance() >= 600000;
+        return player.getBankBalance() < 0 || (hasAllMandatory && player.getBankBalance() >= 600000);
     }
 
     public List<SaleItem> getItemsOfUser(int playerIndex) throws PlayerNotFoundException {
@@ -111,7 +115,6 @@ public class GameModel implements CardListener {
         Optional<Player> optPlayer = players.stream()
                 .filter(p -> p.getIndex() == playerIndex)
                 .findFirst();
-
         if (optPlayer.isPresent()) {
             return optPlayer.get();
         } else {
@@ -120,17 +123,56 @@ public class GameModel implements CardListener {
     }
 
     public void switchPlayer() {
-        if (!currentPlayer.equals(lastStepped)) {
-            publisher.publishEvent(new MessageEvent(this, "Még nem dobtál!"));
-            return;
+        try {
+            if (gameOver) {
+                return;
+            }         
+            if (!currentPlayer.equals(lastStepped)) {
+                publisher.publishEvent(new MessageEvent(this, "Még nem dobtál!"));
+                return;
+            }
+            if (isPlayerWinner(currentPlayer)) {
+                currentPlayer.setWinner(true);
+            } else if (isGameOverForPlayer(currentPlayer)) {
+                currentPlayer.setLoser(true);
+            }
+            if (!isGameOver()) {
+                int newPlayersIndex = (currentPlayer.getIndex() + 1) % players.size();
+                currentPlayer = players.get(newPlayersIndex);
+                int immobilized = currentPlayer.getImmobilized();
+                while (immobilized > 0 || isGameOverForPlayer(currentPlayer) || currentPlayer.isWinner()) {
+                    if (immobilized > 0) {
+                        currentPlayer.setImmobilized(immobilized - 1);
+                    }
+                    lastStepped = currentPlayer;
+                    newPlayersIndex = (currentPlayer.getIndex() + 1) % players.size();
+                    currentPlayer = players.get(newPlayersIndex);
+                    immobilized = currentPlayer.getImmobilized();
+                }
+                System.out.println("Switched player. Current player: " + currentPlayer.getIndex());
+            } else {
+                publisher.publishEvent(new GameOverEvent(this, players.stream().filter(Player::isWinner).toArray(Player[]::new)));
+                gameOver = true;
+            }
+        } catch (PlayerNotFoundException ex) {
+            Logger.getLogger(GameModel.class.getName()).log(Level.SEVERE, null, ex);
         }
-        int newPlayersIndex = (currentPlayer.getIndex() + 1) % players.size();
-        currentPlayer = players.get(newPlayersIndex);
-        System.out.println("Switched player. Current player: " + currentPlayer.getIndex());
     }
 
     public List<Player> getPlayers() {
         return players;
+    }
+
+    private boolean isGameOver() {
+        long countOver = players.stream().filter(p -> p.isWinner() || p.isLoser()).count();
+        if (countOver <= 1) {
+            Player[] notLosers = players.stream().filter(p -> !p.isLoser()).toArray(Player[]::new);
+            if (notLosers.length == 1) {
+                notLosers[0].setWinner(true);
+            }
+            return true;
+        }
+        return false;
     }
 
     private void runFieldEffect(int position) {
@@ -329,7 +371,7 @@ public class GameModel implements CardListener {
             table.get(currentPosition + step).addPlayer(currentPlayer);
             currentPlayer.setPosition(currentPosition + step);
         } else {
-            int nextPosition = step + currentPosition - table.size() - 1;
+            int nextPosition = step + currentPosition - table.size();
             if (nextPosition == 0) {
                 playerSteppedOnStart(true);
             } else {
