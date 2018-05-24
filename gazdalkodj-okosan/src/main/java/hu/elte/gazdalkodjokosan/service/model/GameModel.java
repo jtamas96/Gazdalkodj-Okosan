@@ -103,7 +103,7 @@ public class GameModel implements CardListener {
         boolean hasAllMandatory = items.stream()
                 .filter(userItem -> Item.valueOf(userItem.name).getMandatory())
                 .allMatch(SaleItem::isPurchased);
-        return player.getBankBalance() < 0 || (hasAllMandatory && player.getBankBalance() >= 600000);
+        return hasAllMandatory && player.getBankBalance() >= 600000;
     }
 
     public List<SaleItem> getItemsOfUser(int playerIndex) throws PlayerNotFoundException {
