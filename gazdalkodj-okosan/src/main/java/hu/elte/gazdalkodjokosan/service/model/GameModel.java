@@ -165,7 +165,7 @@ public class GameModel implements CardListener {
 
     private boolean isGameOver() {
         long countOver = players.stream().filter(p -> p.isWinner() || p.isLoser()).count();
-        if (countOver <= 1) {
+        if (players.size() - countOver <= 1) {
             Player[] notLosers = players.stream().filter(p -> !p.isLoser()).toArray(Player[]::new);
             if (notLosers.length == 1) {
                 notLosers[0].setWinner(true);
