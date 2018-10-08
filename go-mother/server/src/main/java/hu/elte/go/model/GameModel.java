@@ -6,7 +6,7 @@ import hu.elte.go.data.SaleItem;
 import hu.elte.go.data.cards.CardListener;
 import hu.elte.go.data.cards.FortuneCardEnum;
 import hu.elte.go.data.enums.Item;
-import hu.elte.go.events.*;
+import hu.elte.go.dtos.*;
 import hu.elte.go.exceptions.PlayerNotFoundException;
 import hu.elte.go.exceptions.PlayerNumberException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -126,7 +126,7 @@ public class GameModel implements CardListener {
                 return;
             }
             if (!currentPlayer.equals(lastStepped)) {
-                publisher.publishEvent(new MessageEvent(this, "Még nem dobtál!"));
+                publisher.publishEvent(new MessageDTO(this, "Még nem dobtál!"));
                 return;
             }
             if (isPlayerWinner(currentPlayer)) {
@@ -149,7 +149,7 @@ public class GameModel implements CardListener {
                 }
                 System.out.println("Switched player. Current player: " + currentPlayer.getIndex());
             } else {
-                publisher.publishEvent(new GameOverEvent(this, players.stream().filter(Player::isWinner).toArray(Player[]::new)));
+//                publisher.publishEvent(new GameOverDTO(this, players.stream().filter(Player::isWinner).toArray(Player[]::new)));
                 gameOver = true;
             }
         } catch (PlayerNotFoundException ex) {
@@ -190,7 +190,7 @@ public class GameModel implements CardListener {
                 if (bkvItemData.getKey()) {
                     priceMap.put(Item.BKV_BERLET.name(), bkvItemData.getValue());
                 }
-                publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
+                publisher.publishEvent(new BuyDTO(this, currentPlayer, priceMap));
                 break;
             case 3:
             case 10:
@@ -215,7 +215,7 @@ public class GameModel implements CardListener {
                 if (carItemData.getKey()) {
                     priceMap.put(Item.AUTO.name(), carItemData.getValue());
                 }
-                publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
+                publisher.publishEvent(new BuyDTO(this, currentPlayer, priceMap));
                 break;
             case 6:
                 writeMessage("Jól kihasználtad a REGIO játékkereskedés akcióit. Vásárlásodért most csak 5.000 Ft- kell fizetned!");
@@ -240,7 +240,7 @@ public class GameModel implements CardListener {
                         priceMap.put(key, itemData.getValue());
                     }
                 }
-                publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
+                publisher.publishEvent(new BuyDTO(this, currentPlayer, priceMap));
                 break;
             case 11:
                 writeMessage("Ha van pénzed és lakásod, vásárolj modern konyhabútort. Fizess 300.000 Ft-ot!");
@@ -249,7 +249,7 @@ public class GameModel implements CardListener {
                     if (furnitureItemData.getKey()) {
                         priceMap.put(Item.KONYHA_BUTOR.name(), furnitureItemData.getValue());
                     }
-                    publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
+                    publisher.publishEvent(new BuyDTO(this, currentPlayer, priceMap));
                 }
                 break;
             case 12:
@@ -283,7 +283,7 @@ public class GameModel implements CardListener {
                 if (houseItemData.getKey()) {
                     priceMap.put(Item.LAKAS.name(), houseItemData.getValue());
                 }
-                publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
+                publisher.publishEvent(new BuyDTO(this, currentPlayer, priceMap));
                 break;
             case 20:
                 writeMessage("Sportszereket vásároltál a DECATHLON Sportáruházban az akciós termékekből, 25000 Ft-ot kell fizetned. Vásárlás után sportoltál is, ezért jutalmul húzz egy Szerencsekerék kártyát!");
@@ -341,7 +341,7 @@ public class GameModel implements CardListener {
                         priceMap.put(key, itemData.getValue());
                     }
                 }
-                publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
+                publisher.publishEvent(new BuyDTO(this, currentPlayer, priceMap));
                 break;
             case 34:
                 writeMessage("Beléptél a KIKA áruházba! Konyhafelszerelésért fizess 40.000 Ft-ot!");
@@ -360,7 +360,7 @@ public class GameModel implements CardListener {
                 Map.Entry<Boolean, Integer> furnitureData = GameModel.itemPurchasable(currentPlayer.getItems(), Item.SZOBA_BUTOR.name());
                 if (currentPlayer.isWithHouse() && furnitureData.getKey()) {
                     priceMap.put(Item.SZOBA_BUTOR.name(), furnitureData.getValue());
-                    publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
+                    publisher.publishEvent(new BuyDTO(this, currentPlayer, priceMap));
                 }
                 break;
             case 39:
@@ -369,7 +369,7 @@ public class GameModel implements CardListener {
                 if (houseItemData2.getKey()) {
                     priceMap.put(Item.LAKAS.name(), houseItemData2.getValue());
                 }
-                publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
+                publisher.publishEvent(new BuyDTO(this, currentPlayer, priceMap));
                 break;
             case 40:
                 writeMessage("Az EURONICS Műszaki Áruházában minőséget vásárolhatsz olcsón. Most vedd meg a televíziód! Fizess 70.000 Ft-ot!");
@@ -377,7 +377,7 @@ public class GameModel implements CardListener {
                 if (tvItemData.getKey()) {
                     priceMap.put(Item.TV.name(), tvItemData.getValue());
                 }
-                publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
+                publisher.publishEvent(new BuyDTO(this, currentPlayer, priceMap));
                 break;
             case 41:
                 writeMessage("A Lufthansa kényelmes és gyors utazást biztosít Európa nagyvárosaiba. A Repülőjegyed ára 60.000 Ft.");
@@ -405,7 +405,7 @@ public class GameModel implements CardListener {
         }
 
         runFieldEffect(currentPlayer.getPosition());
-        publisher.publishEvent(new GameSteppedEvent(this, currentPlayer, table));
+        publisher.publishEvent(new GameSteppedDTO(this, currentPlayer, table));
     }
 
     @Override
@@ -418,7 +418,7 @@ public class GameModel implements CardListener {
         }
         currentPlayer.setPosition(position);
         table.get(position).addPlayer(currentPlayer);
-        publisher.publishEvent(new GameSteppedEvent(this, currentPlayer, table));
+        publisher.publishEvent(new GameSteppedDTO(this, currentPlayer, table));
         runFieldEffect(position);
     }
 
@@ -448,7 +448,7 @@ public class GameModel implements CardListener {
 
     @Override
     public void writeMessage(String message) {
-        publisher.publishEvent(new MessageEvent(this, message));
+        publisher.publishEvent(new MessageDTO(this, message));
     }
 
     @Override
@@ -459,6 +459,6 @@ public class GameModel implements CardListener {
     @Override
     public void playerUpdateFunction(Consumer<Player> f) {
         f.accept(currentPlayer);
-        publisher.publishEvent(new UpdatePlayerEvent(this, currentPlayer));
+        publisher.publishEvent(new UpdatePlayerDTO(this, currentPlayer));
     }
 }

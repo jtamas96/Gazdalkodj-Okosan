@@ -4,25 +4,23 @@ import hu.elte.go.BoardResponse;
 import hu.elte.go.data.Field;
 import hu.elte.go.data.Player;
 import hu.elte.go.data.enums.Item;
-import hu.elte.go.events.*;
+import hu.elte.go.dtos.*;
 import hu.elte.go.exceptions.*;
-import hu.elte.go.service.BoardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.WebSocketHttpHeaders;
 
 import java.util.List;
 
 @Component
 public class Persistence implements IPersistence {
 
-    private final BoardService boardService;
     private final ApplicationEventPublisher publisher;
 
     @Autowired
-    public Persistence(BoardService boardService, ApplicationEventPublisher publisher) {
-        this.boardService = boardService;
+    public Persistence(ApplicationEventPublisher publisher) {
         this.publisher = publisher;
     }
 
@@ -79,37 +77,37 @@ public class Persistence implements IPersistence {
     }
 
     @EventListener
-    public void GameStepped(GameSteppedEvent event) {
+    public void GameStepped(GameSteppedDTO event) {
         if (event.getSource().equals(boardService)) {
-            publisher.publishEvent(new GameSteppedEvent(this, event.getCurrentPlayer(), event.getTable()));
+            publisher.publishEvent(new GameSteppedDTO(this, event.getCurrentPlayer(), event.getTable()));
         }
     }
 
     @EventListener
-    public void SendMessage(MessageEvent event) {
+    public void SendMessage(MessageDTO event) {
         if (event.getSource().equals(boardService)) {
-            publisher.publishEvent(new MessageEvent(this, event.getMessage()));
+            publisher.publishEvent(new MessageDTO(this, event.getMessage()));
         }
     }
 
     @EventListener
-    public void UpdatePlayer(UpdatePlayerEvent event) {
+    public void UpdatePlayer(UpdatePlayerDTO event) {
         if (event.getSource().equals(boardService)) {
-            publisher.publishEvent(new UpdatePlayerEvent(this, event.getPlayer()));
+            publisher.publishEvent(new UpdatePlayerDTO(this, event.getPlayer()));
         }
     }
 
     @EventListener
-    public void BuyItems(BuyEvent event) {
+    public void BuyItems(BuyDTO event) {
         if (event.getSource().equals(boardService)) {
-            publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getItemPrices()));
+            publisher.publishEvent(new BuyDTO(this, event.getPlayer(), event.getItemPrices()));
         }
     }
 
     @EventListener
-    public void GameOver(GameOverEvent event) {
+    public void GameOver(GameOverDTO event) {
         if (event.getSource().equals(boardService)) {
-            publisher.publishEvent(new GameOverEvent(this, event.getWinners()));
+            publisher.publishEvent(new GameOverDTO(this, event.getWinners()));
         }
     }
 }

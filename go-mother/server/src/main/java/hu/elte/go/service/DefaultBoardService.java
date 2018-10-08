@@ -5,9 +5,9 @@ import hu.elte.go.data.Field;
 import hu.elte.go.data.Player;
 import hu.elte.go.data.SaleItem;
 import hu.elte.go.data.enums.Item;
-import hu.elte.go.events.*;
+import hu.elte.go.dtos.*;
 import hu.elte.go.exceptions.*;
-import hu.elte.go.service.model.GameModel;
+import hu.elte.go.model.GameModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
@@ -120,38 +120,38 @@ public class DefaultBoardService implements BoardService {
         model.stepGame();
     }
 
-    @EventListener
-    public void GameStepped(GameSteppedEvent event) {
-        if (event.getSource().equals(model)) {
-            publisher.publishEvent(new GameSteppedEvent(this, event.getCurrentPlayer(), event.getTable()));
-        }
-    }
-
-    @EventListener
-    public void SendMessage(MessageEvent event) {
-        if (event.getSource().equals(model)) {
-            publisher.publishEvent(new MessageEvent(this, event.getMessage()));
-        }
-    }
-
-    @EventListener
-    public void UpdatePlayer(UpdatePlayerEvent event) {
-        if (event.getSource().equals(model)) {
-            publisher.publishEvent(new UpdatePlayerEvent(this, event.getPlayer()));
-        }
-    }
-
-    @EventListener
-    public void BuyItems(BuyEvent event) {
-        if (event.getSource().equals(model)) {
-            publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getItemPrices()));
-        }
-    }
-    
-    @EventListener
-    public void GameOver(GameOverEvent event) {
-        if (event.getSource().equals(model)) {
-            publisher.publishEvent(new GameOverEvent(this, event.getWinners()));
-        }
-    }
+//    @EventListener
+//    public void GameStepped(GameSteppedDTO event) {
+//        if (event.getSource().equals(model)) {
+//            publisher.publishEvent(new GameSteppedDTO(this, event.getCurrentPlayer(), event.getTable()));
+//        }
+//    }
+//
+//    @EventListener
+//    public void SendMessage(MessageDTO event) {
+//        if (event.getSource().equals(model)) {
+//            publisher.publishEvent(new MessageDTO(this, event.getMessage()));
+//        }
+//    }
+//
+//    @EventListener
+//    public void UpdatePlayer(UpdatePlayerDTO event) {
+//        if (event.getSource().equals(model)) {
+//            publisher.publishEvent(new UpdatePlayerDTO(this, event.getPlayer()));
+//        }
+//    }
+//
+//    @EventListener
+//    public void BuyItems(BuyDTO event) {
+//        if (event.getSource().equals(model)) {
+//            publisher.publishEvent(new BuyDTO(this, event.getPlayer(), event.getItemPrices()));
+//        }
+//    }
+//
+//    @EventListener
+//    public void GameOver(GameOverDTO event) {
+//        if (event.getSource().equals(model)) {
+//            publisher.publishEvent(new GameOverDTO(this, event.getWinners()));
+//        }
+//    }
 }
