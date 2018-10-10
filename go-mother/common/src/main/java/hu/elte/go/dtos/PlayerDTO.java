@@ -2,11 +2,11 @@ package hu.elte.go.dtos;
 
 import hu.elte.go.data.Player;
 
-public class UpdatePlayerDTO {
+public class PlayerDTO {
 
     private Player player;
     
-    public UpdatePlayerDTO(Player player) {
+    public PlayerDTO(Player player) {
         this.player = player;
     }
     

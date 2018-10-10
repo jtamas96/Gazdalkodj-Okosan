@@ -5,6 +5,7 @@
  */
 package hu.elte.go.controllers;
 
+import hu.elte.go.exceptions.PlayerNumberException;
 import hu.elte.go.model.ClientModel;
 import hu.elte.go.view.StageManager;
 import hu.elte.go.view.FxmlView;
@@ -52,7 +53,7 @@ public class StarterController implements Initializable {
     }
 
     @FXML
-    private void startGamePressed(ActionEvent event) throws IOException {
+    private void startGamePressed(ActionEvent event) throws IOException, PlayerNumberException {
         RadioButton selectedRadioButton = (RadioButton) playerNum.getSelectedToggle();
         String value = selectedRadioButton.getText();
 

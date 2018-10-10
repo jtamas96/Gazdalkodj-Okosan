@@ -5,15 +5,11 @@
  */
 package hu.elte.go.controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.elte.go.BoardResponse;
 import hu.elte.go.PlayerColor;
 import hu.elte.go.controllers.consts.PawnPosition;
 import hu.elte.go.data.Player;
 import hu.elte.go.data.enums.Item;
-import hu.elte.go.dtos.NewGameRequest;
-import hu.elte.go.dtos.NewGameStartedDTO;
 import hu.elte.go.events.*;
 import hu.elte.go.model.ClientModel;
 import hu.elte.go.view.StageManager;
@@ -29,27 +25,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.messaging.simp.stomp.StompFrameHandler;
-import org.springframework.messaging.simp.stomp.StompHeaders;
-import org.springframework.messaging.simp.stomp.StompSession;
-import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.stereotype.Component;
 import org.springframework.context.event.EventListener;
-import org.springframework.util.concurrent.ListenableFuture;
-import org.springframework.web.socket.WebSocketHttpHeaders;
-import org.springframework.web.socket.client.standard.StandardWebSocketClient;
-import org.springframework.web.socket.messaging.WebSocketStompClient;
-import org.springframework.web.socket.sockjs.client.SockJsClient;
-import org.springframework.web.socket.sockjs.client.Transport;
-import org.springframework.web.socket.sockjs.client.WebSocketTransport;
-import org.springframework.web.socket.sockjs.frame.Jackson2SockJsMessageCodec;
-
-import java.io.IOException;
-import java.lang.reflect.Type;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -63,7 +42,6 @@ import java.util.stream.Stream;
 public class GameBoardController implements Initializable {
 
     ClientModel clientModel;
-    Logger logger = Logger.getLogger(GameBoardController.class.getName());
 
     @Autowired
     @Lazy
@@ -128,17 +106,6 @@ public class GameBoardController implements Initializable {
             pawn.setVisible(true);
             movePawn(player);
         });
-        ListenableFuture<StompSession> f = connect();
-        try {
-            StompSession stompSession = f.get();
-            subscribeToNewGame(stompSession);
-
-            requestNewGame(stompSession);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
 
         // debug
         System.out.println("Játékosok száma: " + clientModel.getPlayers().size());
@@ -149,59 +116,6 @@ public class GameBoardController implements Initializable {
         displayPlayerInfo(clientModel.getCurrentPlayer());
     }
 
-    private final static WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
-
-    private class MyHandler extends StompSessionHandlerAdapter {
-
-        public void afterConnected(StompSession stompSession, StompHeaders stompHeaders) {
-            System.out.println("Now connected");
-        }
-    }
-    public ListenableFuture<StompSession> connect() {
-
-        Transport webSocketTransport = new WebSocketTransport(new StandardWebSocketClient());
-        List<Transport> transports = Collections.singletonList(webSocketTransport);
-
-        SockJsClient sockJsClient = new SockJsClient(transports);
-        sockJsClient.setMessageCodec(new Jackson2SockJsMessageCodec());
-
-        WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
-
-        String url = "ws://{host}:{port}/hello";
-        return stompClient.connect(url, headers, new MyHandler(), "10.10.19.125", 8080);
-    }
-
-    public void subscribeToNewGame(StompSession stompSession) throws ExecutionException, InterruptedException {
-        stompSession.subscribe("/newGameResponse", new StompFrameHandler() {
-
-            @Override
-            public Type getPayloadType(StompHeaders stompHeaders) {
-                return byte[].class;
-            }
-
-            @Override
-            public void handleFrame(StompHeaders stompHeaders, Object o) {
-                ObjectMapper mapper = new ObjectMapper();
-                try {
-                    NewGameStartedDTO newGame = mapper.readValue(new String((byte[]) o), NewGameStartedDTO.class);
-                    System.out.println("Received greeting: " + newGame.toString());
-                } catch (IOException ex) {
-                    java.util.logging.Logger.getLogger(NewGameStartedDTO.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        });
-    }
-    public void requestNewGame(StompSession stompSession) {
-        NewGameRequest ngr = new NewGameRequest(4);
-        ObjectMapper mapper = new ObjectMapper();
-        String json;
-        try {
-            json = mapper.writeValueAsString(ngr);
-            stompSession.send("/app/newGame", json.getBytes());
-        } catch (JsonProcessingException ex) {
-            logger.log(Level.SEVERE, null, ex);
-        }
-    }
     private void displayPlayerInfo(Player currentPlayer) {
         movePawn(currentPlayer);
         balance.setText(currentPlayer.getBankBalance() + "");

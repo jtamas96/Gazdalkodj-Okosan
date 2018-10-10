@@ -14,7 +14,7 @@ public interface IPersistence {
     
     public List<Field> getFields();
     
-    public List<Field> requestNewGame(int playerNumber) throws PlayerNumberException;
+    public void requestNewGame(int playerNumber) throws PlayerNumberException;
     
     public List<Player> getPlayers();
     
