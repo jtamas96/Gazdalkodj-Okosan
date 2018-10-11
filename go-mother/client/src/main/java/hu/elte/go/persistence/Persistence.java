@@ -39,15 +39,16 @@ import org.springframework.web.socket.sockjs.frame.Jackson2SockJsMessageCodec;
 public class Persistence implements IPersistence {
 
     private final ApplicationEventPublisher publisher;
-    private ListenableFuture<StompSession> futureSession;
+    private StompSession stompSession;
     Logger logger = Logger.getLogger(Persistence.class.getName());
 
     @Autowired
     public Persistence(ApplicationEventPublisher publisher) {
         this.publisher = publisher;
         try {
-            futureSession = connect();
-            subscribeToNewGame(futureSession.get());
+            ListenableFuture<StompSession> futureSession = connect();
+            stompSession = futureSession.get();
+            subscribeToNewGame(stompSession);
         } catch (InterruptedException | ExecutionException ex) {
             Logger.getLogger(Persistence.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -79,6 +80,7 @@ public class Persistence implements IPersistence {
 
     @Override
     public void requestNewGame(int playerNumber) throws PlayerNumberException {
+        this.requestNewGame(stompSession, playerNumber);
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -137,8 +139,8 @@ public class Persistence implements IPersistence {
         });
     }
 
-    public void requestNewGame(StompSession stompSession) {
-        NewGameRequest ngr = new NewGameRequest(4);
+    public void requestNewGame(StompSession stompSession, int playerNumber) {
+        NewGameRequest ngr = new NewGameRequest(playerNumber);
         ObjectMapper mapper = new ObjectMapper();
         String json;
         try {

@@ -5,17 +5,10 @@ import hu.elte.go.data.Field;
 import hu.elte.go.data.Player;
 import hu.elte.go.data.SaleItem;
 import hu.elte.go.data.enums.Item;
-import hu.elte.go.dtos.BuyDTO;
-import hu.elte.go.events.BuyEvent;
-import hu.elte.go.events.GameOverEvent;
-import hu.elte.go.events.GameSteppedEvent;
-import hu.elte.go.events.MessageEvent;
-import hu.elte.go.events.UpdatePlayerEvent;
-import hu.elte.go.exceptions.*;
+import hu.elte.go.exceptions.PlayerNumberException;
 import hu.elte.go.model.GameModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -125,38 +118,38 @@ public class DefaultBoardService implements BoardService {
         model.stepGame();
     }
 
-    @EventListener
-    public void GameStepped(GameSteppedEvent event) {
-       if (event.getSource().equals(model)) {
-            
-        }
-    }
-
-    @EventListener
-    public void SendMessage(MessageEvent event) {
-       if (event.getSource().equals(model)) {
-           
-        }
-    }
-
-    @EventListener
-    public void UpdatePlayer(UpdatePlayerEvent event) {
-        if (event.getSource().equals(model)) {
-            
-        }
-    }
-
-    @EventListener
-    public void BuyItems(BuyEvent event) {
-        if (event.getSource().equals(model)) {
-            publisher.publishEvent(new BuyDTO(event.getPlayer(), event.getItemPrices()));
-        }
-    }
-
-    @EventListener
-    public void GameOver(GameOverEvent event) {
-        if (event.getSource().equals(model)) {
-            
-        }
-   }
+//    @EventListener
+//    public void GameStepped(GameSteppedEvent event) {
+//       if (event.getSource().equals(model)) {
+//
+//        }
+//    }
+//
+//    @EventListener
+//    public void SendMessage(MessageEvent event) {
+//       if (event.getSource().equals(model)) {
+//
+//        }
+//    }
+//
+//    @EventListener
+//    public void UpdatePlayer(UpdatePlayerEvent event) {
+//        if (event.getSource().equals(model)) {
+//
+//        }
+//    }
+//
+//    @EventListener
+//    public void BuyItems(BuyEvent event) {
+//        if (event.getSource().equals(model)) {
+//            publisher.publishEvent(new BuyDTO(event.getPlayer(), event.getItemPrices()));
+//        }
+//    }
+//
+//    @EventListener
+//    public void GameOver(GameOverEvent event) {
+//        if (event.getSource().equals(model)) {
+//
+//        }
+//   }
 }

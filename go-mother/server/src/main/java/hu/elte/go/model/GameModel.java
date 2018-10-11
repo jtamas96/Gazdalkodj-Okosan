@@ -6,7 +6,6 @@ import hu.elte.go.data.SaleItem;
 import hu.elte.go.data.cards.CardListener;
 import hu.elte.go.data.cards.FortuneCardEnum;
 import hu.elte.go.data.enums.Item;
-import hu.elte.go.dtos.*;
 import hu.elte.go.events.BuyEvent;
 import hu.elte.go.events.GameSteppedEvent;
 import hu.elte.go.events.MessageEvent;
@@ -257,7 +256,7 @@ public class GameModel implements CardListener {
                 }
                 break;
             case 12:
-                writeMessage("Meglátogattad fővárosunk kedvenc állatait az �?llat- és Növénykertben.");
+                writeMessage("Meglátogattad fővárosunk kedvenc állatait az �?llat- és Növénykertben.");
                 break;
             case 13:
                 writeMessage("Túl sokat idegeskedsz, vonulj szanatóriumba! Kimaradsz két dobásból.");
@@ -376,7 +375,7 @@ public class GameModel implements CardListener {
                 publisher.publishEvent(new BuyEvent(this, currentPlayer, priceMap));
                 break;
             case 40:
-                writeMessage("Az EURONICS Műszaki �?ruházában minőséget vásárolhatsz olcsón. Most vedd meg a televíziód! Fizess 70.000 Ft-ot!");
+                writeMessage("Az EURONICS Műszaki �?ruházában minőséget vásárolhatsz olcsón. Most vedd meg a televíziód! Fizess 70.000 Ft-ot!");
                 Map.Entry<Boolean, Integer> tvItemData = GameModel.itemPurchasable(currentPlayer.getItems(), Item.TV.name());
                 if (tvItemData.getKey()) {
                     priceMap.put(Item.TV.name(), tvItemData.getValue());
@@ -422,7 +421,7 @@ public class GameModel implements CardListener {
         }
         currentPlayer.setPosition(position);
         table.get(position).addPlayer(currentPlayer);
-        publisher.publishEvent(new GameSteppedDTO(currentPlayer, table));
+        publisher.publishEvent(new GameSteppedEvent(this, currentPlayer, table));
         runFieldEffect(position);
     }
 
@@ -452,7 +451,7 @@ public class GameModel implements CardListener {
 
     @Override
     public void writeMessage(String message) {
-        publisher.publishEvent(new MessageDTO(message));
+        publisher.publishEvent(new MessageEvent(this, message));
     }
 
     @Override
