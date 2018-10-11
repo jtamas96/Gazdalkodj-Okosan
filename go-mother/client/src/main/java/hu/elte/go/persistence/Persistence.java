@@ -3,7 +3,6 @@ package hu.elte.go.persistence;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.elte.go.BoardResponse;
-import hu.elte.go.controllers.GameBoardController;
 import hu.elte.go.data.Field;
 import hu.elte.go.data.Player;
 import hu.elte.go.data.enums.Item;
@@ -15,7 +14,6 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 
@@ -128,12 +126,13 @@ public class Persistence implements IPersistence {
             @Override
             public void handleFrame(StompHeaders stompHeaders, Object o) {
                 ObjectMapper mapper = new ObjectMapper();
+                NewGameStartedDTO newGameDTO;
                 try {
-                    NewGameStartedDTO newGameDTO = mapper.readValue(new String((byte[]) o), NewGameStartedDTO.class);
+                    newGameDTO = mapper.readValue(new String((byte[]) o), NewGameStartedDTO.class);
                     NewGameStartedEvent newGameEvent = new NewGameStartedEvent(this, newGameDTO.getTable(), newGameDTO.getPlayers(), newGameDTO.getCurrentPlayer());
                     publisher.publishEvent(newGameEvent);
                 } catch (IOException ex) {
-                    java.util.logging.Logger.getLogger(NewGameStartedDTO.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Persistence.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         });
