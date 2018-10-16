@@ -6,32 +6,33 @@ import hu.elte.go.BoardResponse;
 import hu.elte.go.data.Field;
 import hu.elte.go.data.Player;
 import hu.elte.go.data.enums.Item;
-import hu.elte.go.dtos.*;
+import hu.elte.go.dtos.NewGameRequestDTO;
+import hu.elte.go.dtos.NewGameStartedDTO;
 import hu.elte.go.events.NewGameStartedEvent;
-import hu.elte.go.exceptions.*;
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.Collections;
+import hu.elte.go.exceptions.PlayerNumberException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
-import org.springframework.web.socket.WebSocketHttpHeaders;
-
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
+import org.springframework.stereotype.Component;
 import org.springframework.util.concurrent.ListenableFuture;
+import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.Transport;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 import org.springframework.web.socket.sockjs.frame.Jackson2SockJsMessageCodec;
+
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Component
 public class Persistence implements IPersistence {
@@ -79,7 +80,7 @@ public class Persistence implements IPersistence {
     @Override
     public void requestNewGame(int playerNumber) throws PlayerNumberException {
         this.requestNewGame(stompSession, playerNumber);
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
@@ -128,7 +129,8 @@ public class Persistence implements IPersistence {
                 ObjectMapper mapper = new ObjectMapper();
                 NewGameStartedDTO newGameDTO;
                 try {
-                    newGameDTO = mapper.readValue(new String((byte[]) o), NewGameStartedDTO.class);
+                    String json = new String((byte[]) o);
+                    newGameDTO = mapper.readValue(json, NewGameStartedDTO.class);
                     NewGameStartedEvent newGameEvent = new NewGameStartedEvent(this, newGameDTO.getTable(), newGameDTO.getPlayers(), newGameDTO.getCurrentPlayer());
                     publisher.publishEvent(newGameEvent);
                 } catch (IOException ex) {
@@ -139,7 +141,7 @@ public class Persistence implements IPersistence {
     }
 
     public void requestNewGame(StompSession stompSession, int playerNumber) {
-        NewGameRequest ngr = new NewGameRequest(playerNumber);
+        NewGameRequestDTO ngr = new NewGameRequestDTO(playerNumber);
         ObjectMapper mapper = new ObjectMapper();
         String json;
         try {
@@ -170,8 +172,8 @@ public class Persistence implements IPersistence {
     }
 
     @Override
-    public List<Player> getPlayers() {
-        return boardService.getPlayers().getValue();
+    public List<Player> getPlayersOnFiled() {
+        return boardService.getPlayersOnFiled().getValue();
     }
 
     @Override

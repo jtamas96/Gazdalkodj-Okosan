@@ -9,15 +9,15 @@ import java.util.List;
 
 public class Field {
 
-    private final List<Player> playersOnFiled;
-    private final int number;
+    private List<Player> playersOnFiled;
+    private int number;
 
-    public Field(int number, List<Player> players) {
+    public Field(int number, List<Player> playersOnFiled) {
         this.number = number;
-        this.playersOnFiled = players;
+        this.playersOnFiled = playersOnFiled;
     }
 
-    public List<Player> getPlayers() {
+    public List<Player> getPlayersOnFiled() {
         return playersOnFiled;
     }
 
@@ -31,5 +31,17 @@ public class Field {
 
     public int getNumber() {
         return number;
+    }
+
+    public void setPlayersOnFiled(List<Player> playersOnFiled) {
+        this.playersOnFiled = playersOnFiled;
+    }
+
+    public void setNumber(int number) {
+        this.number = number;
+    }
+
+    public Field(){
+
     }
 }

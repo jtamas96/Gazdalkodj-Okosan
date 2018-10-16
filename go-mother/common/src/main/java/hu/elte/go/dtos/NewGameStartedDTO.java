@@ -28,5 +28,17 @@ public class NewGameStartedDTO {
     public Player getCurrentPlayer() {
         return currentPlayer;
     }
+    public NewGameStartedDTO(){}
 
+    public void setTable(List<Field> table) {
+        this.table = table;
+    }
+
+    public void setPlayers(List<Player> players) {
+        this.players = players;
+    }
+
+    public void setCurrentPlayer(Player currentPlayer) {
+        this.currentPlayer = currentPlayer;
+    }
 }

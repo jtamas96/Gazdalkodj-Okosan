@@ -18,6 +18,12 @@ public class NewGameStartedEvent extends ApplicationEvent {
         this.players = players;
         this.currentPlayer = currentPlayer;
     }
+    public NewGameStartedEvent(Object source, NewGameStartedEvent other){
+        super(source);
+        this.table = other.getTable();
+        this.players = other.getPlayers();
+        this.currentPlayer = other.getCurrentPlayer();
+    }
 
     public List<Field> getTable() {
         return table;

@@ -2,10 +2,9 @@ package hu.elte.go;
 
 import hu.elte.go.data.Player;
 import hu.elte.go.dtos.ClientDTO;
-import hu.elte.go.dtos.NewGameRequest;
+import hu.elte.go.dtos.NewGameRequestDTO;
 import hu.elte.go.dtos.NewGameStartedDTO;
 import hu.elte.go.model.GameModel;
-import hu.elte.go.service.BoardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -34,9 +33,9 @@ public class NewGameController {
 
     @MessageMapping("/newGame")
     @SendTo("/newGameResponse")
-    public NewGameStartedDTO newGame(NewGameRequest newGameRequest) throws Exception {
-        System.out.println("new game ms recieved");
-        gameModel.newGame(newGameRequest.getPlayerNumber());
+    public NewGameStartedDTO newGame(NewGameRequestDTO newGameRequestDTO) throws Exception {
+        System.out.println("new game ms received");
+        gameModel.newGame(newGameRequestDTO.getPlayerNumber());
         List<Player> players =  gameModel.getPlayers();
         NewGameStartedDTO response = new NewGameStartedDTO(gameModel.getTable(), players, gameModel.getCurrentPlayer());
         return response;

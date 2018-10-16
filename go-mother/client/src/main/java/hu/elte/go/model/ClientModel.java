@@ -64,6 +64,7 @@ public class ClientModel {
     public void newGameStarted(NewGameStartedEvent event) {
         players = event.getPlayers();
         currentPlayer = event.getCurrentPlayer();
+        publisher.publishEvent(new NewGameStartedEvent(this, event));
     }
     
     @EventListener

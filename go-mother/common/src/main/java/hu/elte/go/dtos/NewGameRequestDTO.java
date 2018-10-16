@@ -1,9 +1,9 @@
 package hu.elte.go.dtos;
 
-public class NewGameRequest {
+public class NewGameRequestDTO {
     int playerNumber;
 
-    public NewGameRequest(int playerNumber) {
+    public NewGameRequestDTO(int playerNumber) {
         this.playerNumber = playerNumber;
     }
 
@@ -14,4 +14,5 @@ public class NewGameRequest {
     public void setPlayerNumber(int playerNumber) {
         this.playerNumber = playerNumber;
     }
+    public NewGameRequestDTO(){}
 }

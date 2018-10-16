@@ -5,10 +5,11 @@
  */
 package hu.elte.go.controllers;
 
+import hu.elte.go.events.NewGameStartedEvent;
 import hu.elte.go.exceptions.PlayerNumberException;
 import hu.elte.go.model.ClientModel;
-import hu.elte.go.view.StageManager;
 import hu.elte.go.view.FxmlView;
+import hu.elte.go.view.StageManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -17,6 +18,7 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -58,7 +60,13 @@ public class StarterController implements Initializable {
         String value = selectedRadioButton.getText();
 
         clientModel.newGame(Integer.parseInt(value));
-        stageManager.switchScene(FxmlView.BOARD);
+    }
+
+    @EventListener
+    public void NewGameStarted(NewGameStartedEvent event) {
+        if (event.getSource().equals(clientModel)) {
+            stageManager.switchScene(FxmlView.BOARD);
+        }
     }
 
 }

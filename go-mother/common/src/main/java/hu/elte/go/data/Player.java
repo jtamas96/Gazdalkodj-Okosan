@@ -18,7 +18,7 @@ public class Player {
     private boolean withHouse;
     private boolean withCar;
     private boolean withBKVPass;
-    private final Set<Item> insurances;
+    private Set<Item> insurances;
     private int immobilized;
     private boolean loser;
 
@@ -113,5 +113,33 @@ public class Player {
 
     public void setLoser(boolean loser) {
         this.loser = loser;
+    }
+
+    public Player(){
+
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    public void setItems(List<SaleItem> items) {
+        this.items = items;
+    }
+
+    public void setWithHouse(boolean withHouse) {
+        this.withHouse = withHouse;
+    }
+
+    public void setWithCar(boolean withCar) {
+        this.withCar = withCar;
+    }
+
+    public void setWithBKVPass(boolean withBKVPass) {
+        this.withBKVPass = withBKVPass;
+    }
+
+    public void setInsurances(Set<Item> insurances) {
+        this.insurances = insurances;
     }
 }
