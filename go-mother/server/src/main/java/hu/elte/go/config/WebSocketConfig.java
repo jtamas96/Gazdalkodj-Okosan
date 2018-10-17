@@ -1,4 +1,4 @@
-package hu.elte.go;
+package hu.elte.go.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

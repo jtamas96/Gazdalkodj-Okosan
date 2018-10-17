@@ -10,6 +10,7 @@ import hu.elte.go.events.BuyEvent;
 import hu.elte.go.events.GameSteppedEvent;
 import hu.elte.go.events.MessageEvent;
 import hu.elte.go.events.UpdatePlayerEvent;
+import hu.elte.go.exceptions.BuyException;
 import hu.elte.go.exceptions.PlayerNotFoundException;
 import hu.elte.go.exceptions.PlayerNumberException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Component
 public class GameModel implements CardListener {
@@ -447,6 +449,39 @@ public class GameModel implements CardListener {
         FortuneCardEnum fc = fortuneCardDeck.get(last);
         fortuneCardDeck.remove(last);
         fortuneCardDeck.add(0, fc);
+    }
+    
+    public List<Item> buyItems(List<Item> itemList) throws BuyException {
+        List<Item> purchasedNow = new ArrayList<>();
+        List<Item> notEnoughMoneyFor = new ArrayList<>();
+        itemList.forEach((item) -> {
+            SaleItem currentItem = currentPlayer.getItem(item).get(); //TODO: What if not found?
+            if (! currentItem.isPurchased()) {
+                //                return new BoardResponse<>("You want more than one from: " + item.name() + " ?", false, null);
+
+                int bankBalance = currentPlayer.getBankBalance();
+                int currentPrice = currentItem.cost - currentItem.getReducedPriceWith();
+                if (bankBalance >= currentPrice) {
+                    currentPlayer.setBankBalance(bankBalance - currentPrice);
+
+                    currentItem.purchase();
+                    if(item.insurrance){
+                        currentPlayer.getInsurances().add(item);
+                    }
+                    purchasedNow.add(item);
+                } else {
+                    notEnoughMoneyFor.add(item);
+                }
+            }
+        });
+        String notEnoughMoneyForString = "You dont have money for these: " + String.join(
+                ",",
+                notEnoughMoneyFor.stream().map(Enum::toString).collect(Collectors.toList()));
+        if (!notEnoughMoneyFor.isEmpty()) {
+            throw new BuyException(notEnoughMoneyForString);
+        } else {
+            return purchasedNow;
+        }
     }
 
     @Override
