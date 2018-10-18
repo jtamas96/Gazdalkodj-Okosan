@@ -1,0 +1,28 @@
+/*
+ * Empty Stylesheet file.
+ */
+
+#gameBoard {
+    -fx-background-image: url("../images/mezok.jpg");
+    -fx-background-repeat: stretch;   
+    -fx-background-size: 764 550;
+    -fx-background-position: center center;
+    -fx-effect: dropshadow(three-pass-box, black, 30, 0.5, 0, 0);
+}
+
+.button, .button:hover {
+    -fx-text-fill: cdc1b5;
+    -fx-font-family: "Arial Narrow";
+    -fx-font-weight: bold;
+    -fx-background-color: linear-gradient(#ae1e2e, #c42134);
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 5, 0.0 , 0 , 1 );
+    -fx-font-size: 14px;
+}
+
+#egyenlegWrap {
+    -fx-background-color: linear-gradient(#264d00,  #59b300);
+}
+
+#mainWrap {
+    -fx-background-color: linear-gradient(#59b300,  #264d00);
+}
