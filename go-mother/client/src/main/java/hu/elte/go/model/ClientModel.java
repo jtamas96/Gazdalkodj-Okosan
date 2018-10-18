@@ -10,7 +10,6 @@ import hu.elte.go.events.GameSteppedEvent;
 import hu.elte.go.events.MessageEvent;
 import hu.elte.go.events.NewGameStartedEvent;
 import hu.elte.go.events.UpdatePlayerEvent;
-import hu.elte.go.exceptions.PlayerNumberException;
 import hu.elte.go.persistence.IPersistence;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -36,7 +35,7 @@ public class ClientModel {
         this.gameOver = false;
     }
 
-    public void newGame(int playerNumber) throws PlayerNumberException {
+    public void newGame(int playerNumber) {
         persistence.requestNewGame(playerNumber);
     }
 

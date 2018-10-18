@@ -1,15 +1,14 @@
 package hu.elte.go.persistence;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.elte.go.BoardResponse;
-import hu.elte.go.data.Field;
 import hu.elte.go.data.Player;
 import hu.elte.go.data.enums.Item;
 import hu.elte.go.dtos.NewGameRequestDTO;
 import hu.elte.go.dtos.NewGameStartedDTO;
 import hu.elte.go.events.NewGameStartedEvent;
-import hu.elte.go.exceptions.PlayerNumberException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
@@ -68,9 +67,8 @@ public class Persistence implements IPersistence {
     }
 
     @Override
-    public void requestNewGame(int playerNumber) throws PlayerNumberException {
+    public void requestNewGame(int playerNumber) {
         this.requestNewGame(stompSession, playerNumber);
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
@@ -107,12 +105,16 @@ public class Persistence implements IPersistence {
             @Override
             public void handleFrame(StompHeaders stompHeaders, Object o) {
                 ObjectMapper mapper = new ObjectMapper();
-                NewGameStartedDTO newGameDTO;
+                BoardResponse<NewGameStartedDTO> response = null;
                 try {
                     String json = new String((byte[]) o);
-                    newGameDTO = mapper.readValue(json, NewGameStartedDTO.class);
-                    NewGameStartedEvent newGameEvent = new NewGameStartedEvent(this, newGameDTO.getTable(), newGameDTO.getPlayers(), newGameDTO.getCurrentPlayer());
-                    publisher.publishEvent(newGameEvent);
+                    // System.out.println(json);
+                    response = mapper.readValue(json, new TypeReference<BoardResponse<NewGameStartedDTO>>() {});
+                    if(response.isActionSuccessful()){
+                        NewGameStartedDTO v = response.getValue();
+                        NewGameStartedEvent newGameEvent = new NewGameStartedEvent(this, v.getTable(), v.getPlayers(), v.getCurrentPlayer());
+                        publisher.publishEvent(newGameEvent);
+                    }
                 } catch (IOException ex) {
                     Logger.getLogger(Persistence.class.getName()).log(Level.SEVERE, null, ex);
                 }
