@@ -33,4 +33,18 @@ public class BoardResponse<T> {
         return value;
     }
 
+    public BoardResponse() {
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    public void setActionSuccessful(boolean actionSuccessful) {
+        this.actionSuccessful = actionSuccessful;
+    }
+
+    public void setValue(T value) {
+        this.value = value;
+    }
 }
