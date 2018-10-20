@@ -18,16 +18,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 @Controller
 public class GameController {
 
     private final GameModel gameModel;
+    private SimpMessagingTemplate template;
 
     @Autowired
-    public GameController(GameModel gameModel) {
+    public GameController(GameModel gameModel, SimpMessagingTemplate template) {
         this.gameModel = gameModel;
+        this.template = template;
     }
 
     @MessageMapping("/step")
@@ -66,40 +69,44 @@ public class GameController {
     public BoardResponse<List<Item>> buyItems(List<Item> itemList) {
         try {
             List<Item> bought = gameModel.buyItems(itemList);
-            return new BoardResponse("", true, bought);
+            return new BoardResponse<>("", true, bought);
         } catch (BuyException ex) {
-            return new BoardResponse(ex.getMessage(), false, null);
+            return new BoardResponse<>(ex.getMessage(), false, null);
         }
     }
 
     @EventListener
-    @SendTo("/gameStepped")
-    public BoardResponse<GameSteppedDTO> gameStepped(GameSteppedEvent event) {
+    public void gameStepped(GameSteppedEvent event) {
         GameSteppedDTO dto = new GameSteppedDTO(event.getCurrentPlayer(), event.getTable());
-        return new BoardResponse<>("", true, dto);
+        BoardResponse<GameSteppedDTO> response = new BoardResponse<>("", true, dto);
+        this.template.convertAndSend("/gameStepped", response);
     }
 
     @EventListener
-    @SendTo("/messages")
-    public MessageDTO sendMessage(MessageEvent event) {
-        return new MessageDTO(event.getMessage());
+    public void sendMessage(MessageEvent event) {
+        MessageDTO dto = new MessageDTO(event.getMessage());
+        BoardResponse<MessageDTO> response = new BoardResponse<>("", true, dto);
+        this.template.convertAndSend("/messages", response);
     }
 
     @EventListener
-    @SendTo("/playerUpdates")
-    public PlayerUpdateDTO updatePlayer(UpdatePlayerEvent event) {
-        return new PlayerUpdateDTO(event.getPlayer());
+    public void updatePlayer(UpdatePlayerEvent event) {
+        PlayerUpdateDTO dto = new PlayerUpdateDTO(event.getPlayer());
+        BoardResponse<PlayerUpdateDTO> response = new BoardResponse<>("", true, dto);
+        this.template.convertAndSend("/playerUpdates", response);
     }
 
     @EventListener
-    @SendTo("/buyEvents")
-    public BuyDTO buyEvent(BuyEvent event) {
-        return new BuyDTO(event.getPlayer(), event.getItemPrices());
+    public void buyEvent(BuyEvent event) {
+        BuyDTO dto = new BuyDTO(event.getPlayer(), event.getItemPrices());
+        BoardResponse<BuyDTO> response = new BoardResponse<>("", true, dto);
+        this.template.convertAndSend("/buyEvents", response);
     }
 
     @EventListener
-    @SendTo("/gameOver")
-    public GameOverDTO gameOver(GameOverEvent event) {
-        return new GameOverDTO(event.getWinners());
+    public void gameOver(GameOverEvent event) {
+        GameOverDTO dto = new GameOverDTO(event.getWinners());
+        BoardResponse<GameOverDTO> response = new BoardResponse<>("", true, dto);
+        this.template.convertAndSend("/gameOver", response);
     }
 }
