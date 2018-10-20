@@ -3,13 +3,7 @@ package hu.elte.go.controller;
 import hu.elte.go.BoardResponse;
 import hu.elte.go.data.Player;
 import hu.elte.go.data.enums.Item;
-import hu.elte.go.dtos.BuyDTO;
-import hu.elte.go.dtos.GameOverDTO;
-import hu.elte.go.dtos.GameSteppedDTO;
-import hu.elte.go.dtos.MessageDTO;
-import hu.elte.go.dtos.NewGameRequestDTO;
-import hu.elte.go.dtos.NewGameStartedDTO;
-import hu.elte.go.dtos.PlayerDTO;
+import hu.elte.go.dtos.*;
 import hu.elte.go.events.BuyEvent;
 import hu.elte.go.events.GameOverEvent;
 import hu.elte.go.events.GameSteppedEvent;
@@ -19,8 +13,7 @@ import hu.elte.go.exceptions.BuyException;
 import hu.elte.go.exceptions.PlayerNumberException;
 import hu.elte.go.model.GameModel;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -58,10 +51,10 @@ public class GameController {
 
     @MessageMapping("/switchPlayer")
     @SendTo("/switchPlayerResponse")
-    public BoardResponse<PlayerDTO> switchPlayer(int playerIndex) {
+    public BoardResponse<PlayerSwitchedDTO> switchPlayer(int playerIndex) {
         if (gameModel.getCurrentPlayer().getIndex() == playerIndex) {
             gameModel.switchPlayer();
-            PlayerDTO playerDTO = new PlayerDTO(gameModel.getCurrentPlayer());
+            PlayerSwitchedDTO playerDTO = new PlayerSwitchedDTO(gameModel.getCurrentPlayer());
             return new BoardResponse<>("", true, playerDTO);
         } else {
             return new BoardResponse<>("Not your turn bro!", false, null);
@@ -94,8 +87,8 @@ public class GameController {
 
     @EventListener
     @SendTo("/playerUpdates")
-    public PlayerDTO updatePlayer(UpdatePlayerEvent event) {
-        return new PlayerDTO(event.getPlayer());
+    public PlayerUpdateDTO updatePlayer(UpdatePlayerEvent event) {
+        return new PlayerUpdateDTO(event.getPlayer());
     }
 
     @EventListener

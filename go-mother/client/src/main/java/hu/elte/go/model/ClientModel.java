@@ -4,12 +4,7 @@ import hu.elte.go.data.Field;
 import hu.elte.go.data.Player;
 import hu.elte.go.data.enums.Item;
 import hu.elte.go.BoardResponse;
-import hu.elte.go.events.BuyEvent;
-import hu.elte.go.events.GameOverEvent;
-import hu.elte.go.events.GameSteppedEvent;
-import hu.elte.go.events.MessageEvent;
-import hu.elte.go.events.NewGameStartedEvent;
-import hu.elte.go.events.UpdatePlayerEvent;
+import hu.elte.go.events.*;
 import hu.elte.go.persistence.IPersistence;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -52,7 +47,7 @@ public class ClientModel {
     }
 
     public void switchPlayer() {
-        currentPlayer = persistence.switchPlayer(currentPlayer.getIndex());
+        persistence.switchPlayer(currentPlayer.getIndex());
     }
 
     public BoardResponse<List<Item>> buyItems(List<Item> itemsToPurchase) {
@@ -74,6 +69,14 @@ public class ClientModel {
             table = event.getTable();
             currentPlayer.setPosition(event.getCurrentPlayer().getPosition());
             publisher.publishEvent(new GameSteppedEvent(this, event));
+        }
+    }
+
+    @EventListener
+    public void playerSwitched(PlayerSwitchedEvent event){
+        if (event.getSource().equals(persistence)) {
+            currentPlayer = event.getPlayer();
+            publisher.publishEvent(new PlayerSwitchedEvent(this, currentPlayer));
         }
     }
 

@@ -6,10 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.elte.go.BoardResponse;
 import hu.elte.go.data.Player;
 import hu.elte.go.data.enums.Item;
-import hu.elte.go.dtos.EventConvertible;
-import hu.elte.go.dtos.GameSteppedDTO;
-import hu.elte.go.dtos.NewGameRequestDTO;
-import hu.elte.go.dtos.NewGameStartedDTO;
+import hu.elte.go.dtos.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
@@ -50,6 +47,7 @@ public class Persistence implements IPersistence {
             stompSession = futureSession.get();
             subscribeTo("/newGameResponse", this, new TypeReference<BoardResponse<NewGameStartedDTO>>() {});
             subscribeTo("/gameStepped", this, new TypeReference<BoardResponse<GameSteppedDTO>>() {});
+            subscribeTo("/switchPlayerResponse", this, new TypeReference<BoardResponse<PlayerSwitchedDTO>>() {});
         } catch (InterruptedException | ExecutionException ex) {
             Logger.getLogger(Persistence.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -89,8 +87,9 @@ public class Persistence implements IPersistence {
     }
 
     @Override
-    public Player switchPlayer(int currentPlayerIndex) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void switchPlayer(int currentPlayerIndex) {
+        String json = "" + currentPlayerIndex;
+        stompSession.send("/app/switchPlayer", json.getBytes());
     }
 
     @Override

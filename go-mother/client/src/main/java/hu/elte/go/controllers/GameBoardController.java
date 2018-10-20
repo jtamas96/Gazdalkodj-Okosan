@@ -13,6 +13,7 @@ import hu.elte.go.data.enums.Item;
 import hu.elte.go.events.*;
 import hu.elte.go.model.ClientModel;
 import hu.elte.go.view.StageManager;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -151,7 +152,9 @@ public class GameBoardController implements Initializable {
     public void GameStepped(GameSteppedEvent event) {
         if (event.getSource().equals(clientModel)) {
             System.out.println("Game stepped.. by" + event.getCurrentPlayer().getIndex());
-            displayPlayerInfo(event.getCurrentPlayer());
+            Platform.runLater(() -> {
+                displayPlayerInfo(event.getCurrentPlayer());
+            });
         }
     }
 
@@ -162,10 +165,16 @@ public class GameBoardController implements Initializable {
     @FXML
     public void turnOverRequest(javafx.event.ActionEvent actionEvent) {
         clientModel.switchPlayer();
-        if (!clientModel.isGameOver()) {
-            displayPlayerInfo(clientModel.getCurrentPlayer());
-            shoppingList.setItems(null);
-            message.setText("");
+    }
+
+    @EventListener
+    public void playerSwitched(PlayerSwitchedEvent event){
+        if (event.getSource().equals(clientModel) && !clientModel.isGameOver()){
+            Platform.runLater(() -> {
+                displayPlayerInfo(clientModel.getCurrentPlayer());
+                shoppingList.setItems(null);
+                message.setText("");
+            });
         }
     }
 

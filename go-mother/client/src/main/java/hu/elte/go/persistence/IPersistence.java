@@ -8,11 +8,11 @@ import java.util.List;
 
 public interface IPersistence {
     
-    public void requestNewGame(int playerNumber);
+    void requestNewGame(int playerNumber);
     
-    public void requestStep();
+    void requestStep();
 
-    Player switchPlayer(int currentPlayerIndex);
+    void switchPlayer(int currentPlayerIndex);
 
     BoardResponse<List<Item>> buyItems(List<Item> itemsToPurchase);
 }
