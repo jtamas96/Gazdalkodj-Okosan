@@ -81,9 +81,9 @@ public class GameController {
 
     @EventListener
     @SendTo("/gameStepped")
-    public GameSteppedDTO gameStepped(GameSteppedEvent event) {
-        GameSteppedDTO response = new GameSteppedDTO(event.getCurrentPlayer(), event.getTable());
-        return response;
+    public BoardResponse<GameSteppedDTO> gameStepped(GameSteppedEvent event) {
+        GameSteppedDTO dto = new GameSteppedDTO(event.getCurrentPlayer(), event.getTable());
+        return new BoardResponse<>("", true, dto);
     }
 
     @EventListener

@@ -2,10 +2,11 @@ package hu.elte.go.dtos;
 
 import hu.elte.go.data.Field;
 import hu.elte.go.data.Player;
+import hu.elte.go.events.NewGameStartedEvent;
 
 import java.util.List;
 
-public class NewGameStartedDTO {
+public class NewGameStartedDTO implements EventConvertible<NewGameStartedEvent> {
 
     private List<Field> table;
     private List<Player> players;
@@ -40,5 +41,10 @@ public class NewGameStartedDTO {
 
     public void setCurrentPlayer(Player currentPlayer) {
         this.currentPlayer = currentPlayer;
+    }
+
+    @Override
+    public NewGameStartedEvent toEvent(Object source) {
+        return new NewGameStartedEvent(source, table, players, currentPlayer);
     }
 }

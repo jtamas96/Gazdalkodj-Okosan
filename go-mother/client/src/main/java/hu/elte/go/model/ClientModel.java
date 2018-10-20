@@ -26,7 +26,7 @@ public class ClientModel {
     private Player currentPlayer;
     private final ApplicationEventPublisher publisher;
     private boolean gameOver;
-    private IPersistence persistence;
+    private final IPersistence persistence;
 
     @Autowired
     public ClientModel(IPersistence persistence, ApplicationEventPublisher publisher) {
@@ -61,9 +61,11 @@ public class ClientModel {
 
     @EventListener
     public void newGameStarted(NewGameStartedEvent event) {
-        players = event.getPlayers();
-        currentPlayer = event.getCurrentPlayer();
-        publisher.publishEvent(new NewGameStartedEvent(this, event));
+        if(event.getSource().equals(persistence)){
+            players = event.getPlayers();
+            currentPlayer = event.getCurrentPlayer();
+            publisher.publishEvent(new NewGameStartedEvent(this, event));
+        }
     }
     
     @EventListener
@@ -71,7 +73,7 @@ public class ClientModel {
         if (event.getSource().equals(persistence)) {
             table = event.getTable();
             currentPlayer.setPosition(event.getCurrentPlayer().getPosition());
-            publisher.publishEvent(new GameSteppedEvent(this, event.getCurrentPlayer(), event.getTable()));
+            publisher.publishEvent(new GameSteppedEvent(this, event));
         }
     }
 

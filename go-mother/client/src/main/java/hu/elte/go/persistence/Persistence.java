@@ -6,10 +6,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.elte.go.BoardResponse;
 import hu.elte.go.data.Player;
 import hu.elte.go.data.enums.Item;
+import hu.elte.go.dtos.EventConvertible;
+import hu.elte.go.dtos.GameSteppedDTO;
 import hu.elte.go.dtos.NewGameRequestDTO;
 import hu.elte.go.dtos.NewGameStartedDTO;
-import hu.elte.go.events.NewGameStartedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
@@ -46,7 +48,8 @@ public class Persistence implements IPersistence {
         try {
             ListenableFuture<StompSession> futureSession = connect();
             stompSession = futureSession.get();
-            subscribeToNewGame(stompSession);
+            subscribeTo("/newGameResponse", this, new TypeReference<BoardResponse<NewGameStartedDTO>>() {});
+            subscribeTo("/gameStepped", this, new TypeReference<BoardResponse<GameSteppedDTO>>() {});
         } catch (InterruptedException | ExecutionException ex) {
             Logger.getLogger(Persistence.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -68,12 +71,21 @@ public class Persistence implements IPersistence {
 
     @Override
     public void requestNewGame(int playerNumber) {
-        this.requestNewGame(stompSession, playerNumber);
+        NewGameRequestDTO ngr = new NewGameRequestDTO(playerNumber);
+        ObjectMapper mapper = new ObjectMapper();
+        String json;
+        try {
+            json = mapper.writeValueAsString(ngr);
+            stompSession.send("/app/newGame", json.getBytes());
+        } catch (JsonProcessingException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
     }
 
     @Override
     public void requestStep() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        String json = "{}";
+        stompSession.send("/app/step", json.getBytes());
     }
 
     @Override
@@ -94,8 +106,9 @@ public class Persistence implements IPersistence {
         }
     }
 
-    private void subscribeToNewGame(StompSession stompSession) throws ExecutionException, InterruptedException {
-        stompSession.subscribe("/newGameResponse", new StompFrameHandler() {
+    private <D extends EventConvertible<E>, E extends ApplicationEvent>
+    void subscribeTo(String path, Persistence source, TypeReference responseTypeRef) {
+        stompSession.subscribe(path, new StompFrameHandler() {
 
             @Override
             public Type getPayloadType(StompHeaders stompHeaders) {
@@ -105,33 +118,20 @@ public class Persistence implements IPersistence {
             @Override
             public void handleFrame(StompHeaders stompHeaders, Object o) {
                 ObjectMapper mapper = new ObjectMapper();
-                BoardResponse<NewGameStartedDTO> response = null;
+                BoardResponse<D> response;
                 try {
                     String json = new String((byte[]) o);
-                    // System.out.println(json);
-                    response = mapper.readValue(json, new TypeReference<BoardResponse<NewGameStartedDTO>>() {});
+                    response = mapper.readValue(json, responseTypeRef);
                     if(response.isActionSuccessful()){
-                        NewGameStartedDTO v = response.getValue();
-                        NewGameStartedEvent newGameEvent = new NewGameStartedEvent(this, v.getTable(), v.getPlayers(), v.getCurrentPlayer());
-                        publisher.publishEvent(newGameEvent);
+                        D dto = response.getValue();
+                        E event = dto.toEvent(source);
+                        publisher.publishEvent(event);
                     }
                 } catch (IOException ex) {
                     Logger.getLogger(Persistence.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         });
-    }
-
-    public void requestNewGame(StompSession stompSession, int playerNumber) {
-        NewGameRequestDTO ngr = new NewGameRequestDTO(playerNumber);
-        ObjectMapper mapper = new ObjectMapper();
-        String json;
-        try {
-            json = mapper.writeValueAsString(ngr);
-            stompSession.send("/app/newGame", json.getBytes());
-        } catch (JsonProcessingException ex) {
-            logger.log(Level.SEVERE, null, ex);
-        }
     }
 
     /*@Override
@@ -145,15 +145,6 @@ public class Persistence implements IPersistence {
     }
 
     @Override
-    public void requestNewGame(int playerNumber) throws PlayerNumberException {
-        BoardResponse<List<Field>> response = boardService.getNewGame(playerNumber);
-
-        if (!response.isActionSuccessful()) {
-            throw new PlayerNumberException(response.getErrorMessage());
-        }
-    }
-
-    @Override
     public List<Player> getPlayersOnFiled() {
         return boardService.getPlayersOnFiled().getValue();
     }
@@ -161,11 +152,6 @@ public class Persistence implements IPersistence {
     @Override
     public Player getCurrentPlayer() {
         return boardService.getCurrentPlayer().getValue();
-    }
-
-    @Override
-    public void requestStep() {
-        boardService.stepGame();
     }
 
     @Override

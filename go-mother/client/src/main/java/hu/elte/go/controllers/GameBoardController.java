@@ -25,11 +25,11 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
 import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
 import java.net.URL;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -150,7 +150,6 @@ public class GameBoardController implements Initializable {
     @EventListener
     public void GameStepped(GameSteppedEvent event) {
         if (event.getSource().equals(clientModel)) {
-            //Todo react, refresh the view!
             System.out.println("Game stepped.. by" + event.getCurrentPlayer().getIndex());
             displayPlayerInfo(event.getCurrentPlayer());
         }
