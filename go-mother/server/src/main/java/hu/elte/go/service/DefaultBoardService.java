@@ -133,7 +133,7 @@ public class DefaultBoardService implements BoardService {
 //    }
 //
 //    @EventListener
-//    public void UpdatePlayer(UpdatePlayerEvent event) {
+//    public void UpdatePlayer(PlayerUpdateEvent event) {
 //        if (event.getSource().equals(model)) {
 //
 //        }

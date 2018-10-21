@@ -9,7 +9,7 @@ import hu.elte.go.data.enums.Item;
 import hu.elte.go.events.BuyEvent;
 import hu.elte.go.events.GameSteppedEvent;
 import hu.elte.go.events.MessageEvent;
-import hu.elte.go.events.UpdatePlayerEvent;
+import hu.elte.go.events.PlayerUpdateEvent;
 import hu.elte.go.exceptions.BuyException;
 import hu.elte.go.exceptions.PlayerNotFoundException;
 import hu.elte.go.exceptions.PlayerNumberException;
@@ -104,7 +104,7 @@ public class GameModel implements CardListener {
         List<SaleItem> items = getItemsOfUser(player.getIndex());
 
         boolean hasAllMandatory = items.stream()
-                .filter(userItem -> Item.valueOf(userItem.name).getMandatory())
+                .filter(userItem -> Item.valueOf(userItem.name).isMandatoryForWining())
                 .allMatch(SaleItem::isPurchased);
         return hasAllMandatory && player.getBankBalance() >= 600000 && player.getDebt() == 0;
     }
@@ -497,6 +497,6 @@ public class GameModel implements CardListener {
     @Override
     public void playerUpdateFunction(Consumer<Player> f) {
         f.accept(currentPlayer);
-        publisher.publishEvent(new UpdatePlayerEvent(this, currentPlayer));
+        publisher.publishEvent(new PlayerUpdateEvent(this, currentPlayer));
     }
 }

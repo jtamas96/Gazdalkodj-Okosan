@@ -1,9 +1,9 @@
 package hu.elte.go.dtos;
 
 import hu.elte.go.data.Player;
-import hu.elte.go.events.UpdatePlayerEvent;
+import hu.elte.go.events.PlayerUpdateEvent;
 
-public class PlayerUpdateDTO implements EventConvertible<UpdatePlayerEvent> {
+public class PlayerUpdateDTO implements EventConvertible<PlayerUpdateEvent> {
 
     private Player player;
     
@@ -22,7 +22,7 @@ public class PlayerUpdateDTO implements EventConvertible<UpdatePlayerEvent> {
     }
 
     @Override
-    public UpdatePlayerEvent toEvent(Object source) {
-        return new UpdatePlayerEvent(source, player);
+    public PlayerUpdateEvent toEvent(Object source) {
+        return new PlayerUpdateEvent(source, player);
     }
 }

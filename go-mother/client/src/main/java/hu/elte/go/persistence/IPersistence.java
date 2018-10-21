@@ -14,5 +14,5 @@ public interface IPersistence {
 
     void switchPlayer(int currentPlayerIndex);
 
-    BoardResponse<List<Item>> buyItems(List<Item> itemsToPurchase);
+    void buyItems(List<String> itemsToPurchase);
 }

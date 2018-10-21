@@ -181,27 +181,33 @@ public class GameBoardController implements Initializable {
     @EventListener
     public void SendMessage(MessageEvent event) {
         if (event.getSource().equals(clientModel)) {
-            message.setText(event.getMessage());
+            Platform.runLater(() -> {
+                message.setText(event.getMessage());
+            });
         }
     }
 
     @EventListener
-    public void UpdatePlayer(UpdatePlayerEvent event) {
+    public void UpdatePlayer(PlayerUpdateEvent event) {
         if (event.getSource().equals(clientModel)) {
-            //Todo react
+            Platform.runLater(() -> {
+                displayPlayerInfo(event.getPlayer());
+            });
         }
     }
 
     @EventListener
     public void BuyItems(BuyEvent event) {
         if (event.getSource().equals(clientModel)) {
-            System.out.println("Vasarolsz most az alábbiak közül!");
-            System.out.println(Arrays.toString(event.getItemPrices().keySet().toArray()));
-            System.out.println("valuek:" + Arrays.toString(event.getItemPrices().values().toArray()));
-            Map<String, Integer> purchaseableItems = event.getItemPrices();
-            ObservableList<Map.Entry<String, Integer>> shoppingListItems = FXCollections.observableArrayList(purchaseableItems.entrySet());
-            shoppingList.setItems(shoppingListItems);
-            buyItems.setDisable(false);
+            Platform.runLater(() -> {
+                System.out.println("Vasarolsz most az alábbiak közül!");
+                System.out.println(Arrays.toString(event.getItemPrices().keySet().toArray()));
+                System.out.println("valuek:" + Arrays.toString(event.getItemPrices().values().toArray()));
+                Map<String, Integer> purchaseableItems = event.getItemPrices();
+                ObservableList<Map.Entry<String, Integer>> shoppingListItems = FXCollections.observableArrayList(purchaseableItems.entrySet());
+                shoppingList.setItems(shoppingListItems);
+                buyItems.setDisable(false);
+            });
         }
     }
 
@@ -214,21 +220,25 @@ public class GameBoardController implements Initializable {
 
         System.out.println("User selected: ");
         selectedItems.forEach(System.out::println);
-        BoardResponse<List<Item>> listBoardResponse = clientModel.buyItems(
+        clientModel.buyItems(
                 selectedItems.stream()
                         .map(Map.Entry::getKey)
-                        .map(Item::valueOf)
                         .collect(Collectors.toList())
         );
-        if (listBoardResponse.isActionSuccessful()) {
-            shoppingList.getItems().removeAll(selectedItems);
-            if (shoppingList.getItems().isEmpty()) {
-                buyItems.setDisable(true);
-            }
-            populatePurchasedList(clientModel.getCurrentPlayer());
-            message.setText("Sikeres vásárlás");
-        } else {
-            message.setText("Túl sok mindent szedtél össze.");
+        shoppingList.getItems().removeAll(selectedItems);
+    }
+
+    @EventListener
+    public void ItemsPurchased(ItemsPurchasedEvent event) {
+        // TODO: use event to remove elements from list.
+        if (event.getSource().equals(clientModel)) {
+            Platform.runLater(() -> {
+                if (shoppingList.getItems().isEmpty()) {
+                    buyItems.setDisable(true);
+                }
+                populatePurchasedList(clientModel.getCurrentPlayer());
+                message.setText("Sikeres vásárlás");
+            });
         }
     }
 

@@ -48,8 +48,13 @@ public class Persistence implements IPersistence {
             subscribeTo("/newGameResponse", this, new TypeReference<BoardResponse<NewGameStartedDTO>>() {});
             subscribeTo("/gameStepped", this, new TypeReference<BoardResponse<GameSteppedDTO>>() {});
             subscribeTo("/switchPlayerResponse", this, new TypeReference<BoardResponse<PlayerSwitchedDTO>>() {});
+            subscribeTo("/messages", this, new TypeReference<BoardResponse<MessageDTO>>() {});
+            subscribeTo("/playerUpdates", this, new TypeReference<BoardResponse<PlayerUpdateDTO>>() {});
+            subscribeTo("/buyEvents", this, new TypeReference<BoardResponse<BuyDTO>>() {});
+            subscribeTo("/buyItemsResponse", this, new TypeReference<BoardResponse<PurchasedListDTO>>() {});
+            subscribeTo("/gameOver", this, new TypeReference<BoardResponse<GameOverDTO>>() {});
         } catch (InterruptedException | ExecutionException ex) {
-            Logger.getLogger(Persistence.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -93,8 +98,16 @@ public class Persistence implements IPersistence {
     }
 
     @Override
-    public BoardResponse<List<Item>> buyItems(List<Item> itemsToPurchase) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void buyItems(List<String> itemsToPurchase) {
+        ItemListDTO dto = new ItemListDTO(itemsToPurchase);
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String json = mapper.writeValueAsString(dto);
+            System.out.println(json);
+            stompSession.send("/app/buyItems", json.getBytes());
+        } catch (JsonProcessingException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
     }
 
     private class MyHandler extends StompSessionHandlerAdapter {
@@ -127,87 +140,9 @@ public class Persistence implements IPersistence {
                         publisher.publishEvent(event);
                     }
                 } catch (IOException ex) {
-                    Logger.getLogger(Persistence.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, null, ex);
                 }
             }
         });
     }
-
-    /*@Override
-    public Player getPlayer(int index) {
-        return boardService.getPlayer(index).getValue();
-    }
-
-    @Override
-    public List<Field> getFields() {
-        return boardService.getTable();
-    }
-
-    @Override
-    public List<Player> getPlayersOnFiled() {
-        return boardService.getPlayersOnFiled().getValue();
-    }
-
-    @Override
-    public Player getCurrentPlayer() {
-        return boardService.getCurrentPlayer().getValue();
-    }
-
-    @Override
-    public Player switchPlayer(int currentPlayerIndex
-    ) {
-        BoardResponse<Player> resp = boardService.switchToNextPlayer(currentPlayerIndex);
-        if (resp.isActionSuccessful()) {
-            return resp.getValue();
-        } else {
-            System.out.println("Error:" + resp.getErrorMessage());
-        }
-        return null;
-    }
-
-    @Override
-    public BoardResponse<List<Item>> buyItems(List<Item> itemsToPurchase
-    ) {
-        return boardService.buyItems(itemsToPurchase);
-    }
-
-    @EventListener
-    public void GameStepped(GameSteppedDTO event
-    ) {
-        if (event.getSource().equals(boardService)) {
-            publisher.publishEvent(new GameSteppedDTO(this, event.getCurrentPlayer(), event.getTable()));
-        }
-    }
-
-    @EventListener
-    public void SendMessage(MessageDTO event
-    ) {
-        if (event.getSource().equals(boardService)) {
-            publisher.publishEvent(new MessageDTO(this, event.getMessage()));
-        }
-    }
-
-    @EventListener
-    public void UpdatePlayer(UpdatePlayerDTO event
-    ) {
-        if (event.getSource().equals(boardService)) {
-            publisher.publishEvent(new UpdatePlayerDTO(this, event.getPlayer()));
-        }
-    }
-
-    @EventListener
-    public void BuyItems(BuyDTO event
-    ) {
-        if (event.getSource().equals(boardService)) {
-            publisher.publishEvent(new BuyDTO(this, event.getPlayer(), event.getItemPrices()));
-        }
-    }
-
-    @EventListener
-    public void GameOver(GameOverDTO event
-    ) {
-        if (event.getSource().equals(boardService)) {
-            publisher.publishEvent(new GameOverDTO(this, event.getWinners()));
-        }
-    }*/
 }

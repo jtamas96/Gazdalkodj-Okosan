@@ -4,22 +4,20 @@ import hu.elte.go.BoardResponse;
 import hu.elte.go.data.Player;
 import hu.elte.go.data.enums.Item;
 import hu.elte.go.dtos.*;
-import hu.elte.go.events.BuyEvent;
-import hu.elte.go.events.GameOverEvent;
-import hu.elte.go.events.GameSteppedEvent;
-import hu.elte.go.events.MessageEvent;
-import hu.elte.go.events.UpdatePlayerEvent;
+import hu.elte.go.events.*;
 import hu.elte.go.exceptions.BuyException;
 import hu.elte.go.exceptions.PlayerNumberException;
 import hu.elte.go.model.GameModel;
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 public class GameController {
@@ -66,11 +64,17 @@ public class GameController {
 
     @MessageMapping("/buyItems")
     @SendTo("/buyItemsResponse")
-    public BoardResponse<List<Item>> buyItems(List<Item> itemList) {
+    public BoardResponse<PurchasedListDTO> buyItems(ItemListDTO itemsDto) {
         try {
-            List<Item> bought = gameModel.buyItems(itemList);
-            return new BoardResponse<>("", true, bought);
-        } catch (BuyException ex) {
+            List<Item> wishList = itemsDto.getItemList().stream()
+                    .map(Item::valueOf)
+                    .collect(Collectors.toList());
+            List<Item> bought = gameModel.buyItems(wishList);
+            Map<String, Integer> boughtMap = bought.stream()
+                    .collect(Collectors.toMap(Enum::toString, Item::getCost));
+            PurchasedListDTO responseDto = new PurchasedListDTO(boughtMap);
+            return new BoardResponse<>("", true, responseDto);
+        } catch (BuyException | IllegalArgumentException ex) {
             return new BoardResponse<>(ex.getMessage(), false, null);
         }
     }
@@ -90,7 +94,7 @@ public class GameController {
     }
 
     @EventListener
-    public void updatePlayer(UpdatePlayerEvent event) {
+    public void updatePlayer(PlayerUpdateEvent event) {
         PlayerUpdateDTO dto = new PlayerUpdateDTO(event.getPlayer());
         BoardResponse<PlayerUpdateDTO> response = new BoardResponse<>("", true, dto);
         this.template.convertAndSend("/playerUpdates", response);

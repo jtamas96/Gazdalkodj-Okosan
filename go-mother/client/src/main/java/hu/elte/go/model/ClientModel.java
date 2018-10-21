@@ -2,8 +2,8 @@ package hu.elte.go.model;
 
 import hu.elte.go.data.Field;
 import hu.elte.go.data.Player;
+import hu.elte.go.data.SaleItem;
 import hu.elte.go.data.enums.Item;
-import hu.elte.go.BoardResponse;
 import hu.elte.go.events.*;
 import hu.elte.go.persistence.IPersistence;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +12,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class ClientModel {
@@ -50,8 +52,8 @@ public class ClientModel {
         persistence.switchPlayer(currentPlayer.getIndex());
     }
 
-    public BoardResponse<List<Item>> buyItems(List<Item> itemsToPurchase) {
-        return persistence.buyItems(itemsToPurchase);
+    public void buyItems(List<String> itemsToPurchase) {
+        persistence.buyItems(itemsToPurchase);
     }
 
     @EventListener
@@ -88,12 +90,12 @@ public class ClientModel {
     }
 
     @EventListener
-    public void UpdatePlayer(UpdatePlayerEvent event) {
+    public void UpdatePlayer(PlayerUpdateEvent event) {
         if (event.getSource().equals(persistence)) {
             table.get(currentPlayer.getPosition()).removePlayer(currentPlayer);
             Player player = event.getPlayer();
             players.set(player.getIndex(), player);
-            publisher.publishEvent(new UpdatePlayerEvent(this, event.getPlayer()));
+            publisher.publishEvent(new PlayerUpdateEvent(this, event.getPlayer()));
         }
     }
 
@@ -101,6 +103,19 @@ public class ClientModel {
     public void BuyItems(BuyEvent event) {
         if (event.getSource().equals(persistence)) {
             publisher.publishEvent(new BuyEvent(this, event.getPlayer(), event.getItemPrices()));
+        }
+    }
+
+    @EventListener
+    public void ItemsPurchased(ItemsPurchasedEvent event) {
+        if (event.getSource().equals(persistence)) {
+            Map<String, Integer> bought = event.getItems();
+            bought.keySet().forEach(
+                    name -> {
+                        Optional<SaleItem> siOpt = currentPlayer.getItem(Item.valueOf(name));
+                        siOpt.ifPresent(SaleItem::purchase);
+                    });
+            publisher.publishEvent(new ItemsPurchasedEvent(this, event.getItems()));
         }
     }
 
