@@ -13,6 +13,7 @@ import hu.elte.go.data.enums.Item;
 import hu.elte.go.events.*;
 import hu.elte.go.model.ClientModel;
 import hu.elte.go.view.StageManager;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -25,11 +26,11 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
 import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
 import java.net.URL;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -150,9 +151,10 @@ public class GameBoardController implements Initializable {
     @EventListener
     public void GameStepped(GameSteppedEvent event) {
         if (event.getSource().equals(clientModel)) {
-            //Todo react, refresh the view!
             System.out.println("Game stepped.. by" + event.getCurrentPlayer().getIndex());
-            displayPlayerInfo(event.getCurrentPlayer());
+            Platform.runLater(() -> {
+                displayPlayerInfo(event.getCurrentPlayer());
+            });
         }
     }
 
@@ -163,37 +165,49 @@ public class GameBoardController implements Initializable {
     @FXML
     public void turnOverRequest(javafx.event.ActionEvent actionEvent) {
         clientModel.switchPlayer();
-        if (!clientModel.isGameOver()) {
-            displayPlayerInfo(clientModel.getCurrentPlayer());
-            shoppingList.setItems(null);
-            message.setText("");
+    }
+
+    @EventListener
+    public void playerSwitched(PlayerSwitchedEvent event){
+        if (event.getSource().equals(clientModel) && !clientModel.isGameOver()){
+            Platform.runLater(() -> {
+                displayPlayerInfo(clientModel.getCurrentPlayer());
+                shoppingList.setItems(null);
+                message.setText("");
+            });
         }
     }
 
     @EventListener
     public void SendMessage(MessageEvent event) {
         if (event.getSource().equals(clientModel)) {
-            message.setText(event.getMessage());
+            Platform.runLater(() -> {
+                message.setText(event.getMessage());
+            });
         }
     }
 
     @EventListener
-    public void UpdatePlayer(UpdatePlayerEvent event) {
+    public void UpdatePlayer(PlayerUpdateEvent event) {
         if (event.getSource().equals(clientModel)) {
-            //Todo react
+            Platform.runLater(() -> {
+                displayPlayerInfo(event.getPlayer());
+            });
         }
     }
 
     @EventListener
     public void BuyItems(BuyEvent event) {
         if (event.getSource().equals(clientModel)) {
-            System.out.println("Vasarolsz most az alábbiak közül!");
-            System.out.println(Arrays.toString(event.getItemPrices().keySet().toArray()));
-            System.out.println("valuek:" + Arrays.toString(event.getItemPrices().values().toArray()));
-            Map<String, Integer> purchaseableItems = event.getItemPrices();
-            ObservableList<Map.Entry<String, Integer>> shoppingListItems = FXCollections.observableArrayList(purchaseableItems.entrySet());
-            shoppingList.setItems(shoppingListItems);
-            buyItems.setDisable(false);
+            Platform.runLater(() -> {
+                System.out.println("Vasarolsz most az alábbiak közül!");
+                System.out.println(Arrays.toString(event.getItemPrices().keySet().toArray()));
+                System.out.println("valuek:" + Arrays.toString(event.getItemPrices().values().toArray()));
+                Map<String, Integer> purchaseableItems = event.getItemPrices();
+                ObservableList<Map.Entry<String, Integer>> shoppingListItems = FXCollections.observableArrayList(purchaseableItems.entrySet());
+                shoppingList.setItems(shoppingListItems);
+                buyItems.setDisable(false);
+            });
         }
     }
 
@@ -206,21 +220,25 @@ public class GameBoardController implements Initializable {
 
         System.out.println("User selected: ");
         selectedItems.forEach(System.out::println);
-        BoardResponse<List<Item>> listBoardResponse = clientModel.buyItems(
+        clientModel.buyItems(
                 selectedItems.stream()
                         .map(Map.Entry::getKey)
-                        .map(Item::valueOf)
                         .collect(Collectors.toList())
         );
-        if (listBoardResponse.isActionSuccessful()) {
-            shoppingList.getItems().removeAll(selectedItems);
-            if (shoppingList.getItems().isEmpty()) {
-                buyItems.setDisable(true);
-            }
-            populatePurchasedList(clientModel.getCurrentPlayer());
-            message.setText("Sikeres vásárlás");
-        } else {
-            message.setText("Túl sok mindent szedtél össze.");
+        shoppingList.getItems().removeAll(selectedItems);
+    }
+
+    @EventListener
+    public void ItemsPurchased(ItemsPurchasedEvent event) {
+        // TODO: use event to remove elements from list.
+        if (event.getSource().equals(clientModel)) {
+            Platform.runLater(() -> {
+                if (shoppingList.getItems().isEmpty()) {
+                    buyItems.setDisable(true);
+                }
+                populatePurchasedList(clientModel.getCurrentPlayer());
+                message.setText("Sikeres vásárlás");
+            });
         }
     }
 

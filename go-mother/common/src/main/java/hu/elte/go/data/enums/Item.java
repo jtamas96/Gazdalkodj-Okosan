@@ -43,7 +43,7 @@ public enum Item {
         return cost;
     }
 
-    public boolean getMandatory() {
+    public boolean isMandatoryForWining() {
         return mandatoryForWining;
     }
 }

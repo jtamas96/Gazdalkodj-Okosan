@@ -6,10 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.elte.go.BoardResponse;
 import hu.elte.go.data.Player;
 import hu.elte.go.data.enums.Item;
-import hu.elte.go.dtos.NewGameRequestDTO;
-import hu.elte.go.dtos.NewGameStartedDTO;
-import hu.elte.go.events.NewGameStartedEvent;
+import hu.elte.go.dtos.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
@@ -46,9 +45,16 @@ public class Persistence implements IPersistence {
         try {
             ListenableFuture<StompSession> futureSession = connect();
             stompSession = futureSession.get();
-            subscribeToNewGame(stompSession);
+            subscribeTo("/newGameResponse", this, new TypeReference<BoardResponse<NewGameStartedDTO>>() {});
+            subscribeTo("/gameStepped", this, new TypeReference<BoardResponse<GameSteppedDTO>>() {});
+            subscribeTo("/switchPlayerResponse", this, new TypeReference<BoardResponse<PlayerSwitchedDTO>>() {});
+            subscribeTo("/messages", this, new TypeReference<BoardResponse<MessageDTO>>() {});
+            subscribeTo("/playerUpdates", this, new TypeReference<BoardResponse<PlayerUpdateDTO>>() {});
+            subscribeTo("/buyEvents", this, new TypeReference<BoardResponse<BuyDTO>>() {});
+            subscribeTo("/buyItemsResponse", this, new TypeReference<BoardResponse<PurchasedListDTO>>() {});
+            subscribeTo("/gameOver", this, new TypeReference<BoardResponse<GameOverDTO>>() {});
         } catch (InterruptedException | ExecutionException ex) {
-            Logger.getLogger(Persistence.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -68,61 +74,6 @@ public class Persistence implements IPersistence {
 
     @Override
     public void requestNewGame(int playerNumber) {
-        this.requestNewGame(stompSession, playerNumber);
-    }
-
-    @Override
-    public void requestStep() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Player switchPlayer(int currentPlayerIndex) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public BoardResponse<List<Item>> buyItems(List<Item> itemsToPurchase) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    private class MyHandler extends StompSessionHandlerAdapter {
-
-        @Override
-        public void afterConnected(StompSession stompSession, StompHeaders stompHeaders) {
-            System.out.println("Now connected");
-        }
-    }
-
-    private void subscribeToNewGame(StompSession stompSession) throws ExecutionException, InterruptedException {
-        stompSession.subscribe("/newGameResponse", new StompFrameHandler() {
-
-            @Override
-            public Type getPayloadType(StompHeaders stompHeaders) {
-                return byte[].class;
-            }
-
-            @Override
-            public void handleFrame(StompHeaders stompHeaders, Object o) {
-                ObjectMapper mapper = new ObjectMapper();
-                BoardResponse<NewGameStartedDTO> response = null;
-                try {
-                    String json = new String((byte[]) o);
-                    // System.out.println(json);
-                    response = mapper.readValue(json, new TypeReference<BoardResponse<NewGameStartedDTO>>() {});
-                    if(response.isActionSuccessful()){
-                        NewGameStartedDTO v = response.getValue();
-                        NewGameStartedEvent newGameEvent = new NewGameStartedEvent(this, v.getTable(), v.getPlayers(), v.getCurrentPlayer());
-                        publisher.publishEvent(newGameEvent);
-                    }
-                } catch (IOException ex) {
-                    Logger.getLogger(Persistence.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        });
-    }
-
-    public void requestNewGame(StompSession stompSession, int playerNumber) {
         NewGameRequestDTO ngr = new NewGameRequestDTO(playerNumber);
         ObjectMapper mapper = new ObjectMapper();
         String json;
@@ -134,95 +85,64 @@ public class Persistence implements IPersistence {
         }
     }
 
-    /*@Override
-    public Player getPlayer(int index) {
-        return boardService.getPlayer(index).getValue();
-    }
-
-    @Override
-    public List<Field> getFields() {
-        return boardService.getTable();
-    }
-
-    @Override
-    public void requestNewGame(int playerNumber) throws PlayerNumberException {
-        BoardResponse<List<Field>> response = boardService.getNewGame(playerNumber);
-
-        if (!response.isActionSuccessful()) {
-            throw new PlayerNumberException(response.getErrorMessage());
-        }
-    }
-
-    @Override
-    public List<Player> getPlayersOnFiled() {
-        return boardService.getPlayersOnFiled().getValue();
-    }
-
-    @Override
-    public Player getCurrentPlayer() {
-        return boardService.getCurrentPlayer().getValue();
-    }
-
     @Override
     public void requestStep() {
-        boardService.stepGame();
+        String json = "{}";
+        stompSession.send("/app/step", json.getBytes());
     }
 
     @Override
-    public Player switchPlayer(int currentPlayerIndex
-    ) {
-        BoardResponse<Player> resp = boardService.switchToNextPlayer(currentPlayerIndex);
-        if (resp.isActionSuccessful()) {
-            return resp.getValue();
-        } else {
-            System.out.println("Error:" + resp.getErrorMessage());
-        }
-        return null;
+    public void switchPlayer(int currentPlayerIndex) {
+        String json = "" + currentPlayerIndex;
+        stompSession.send("/app/switchPlayer", json.getBytes());
     }
 
     @Override
-    public BoardResponse<List<Item>> buyItems(List<Item> itemsToPurchase
-    ) {
-        return boardService.buyItems(itemsToPurchase);
-    }
-
-    @EventListener
-    public void GameStepped(GameSteppedDTO event
-    ) {
-        if (event.getSource().equals(boardService)) {
-            publisher.publishEvent(new GameSteppedDTO(this, event.getCurrentPlayer(), event.getTable()));
+    public void buyItems(List<String> itemsToPurchase) {
+        ItemListDTO dto = new ItemListDTO(itemsToPurchase);
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String json = mapper.writeValueAsString(dto);
+            System.out.println(json);
+            stompSession.send("/app/buyItems", json.getBytes());
+        } catch (JsonProcessingException ex) {
+            logger.log(Level.SEVERE, null, ex);
         }
     }
 
-    @EventListener
-    public void SendMessage(MessageDTO event
-    ) {
-        if (event.getSource().equals(boardService)) {
-            publisher.publishEvent(new MessageDTO(this, event.getMessage()));
+    private class MyHandler extends StompSessionHandlerAdapter {
+
+        @Override
+        public void afterConnected(StompSession stompSession, StompHeaders stompHeaders) {
+            System.out.println("Now connected");
         }
     }
 
-    @EventListener
-    public void UpdatePlayer(UpdatePlayerDTO event
-    ) {
-        if (event.getSource().equals(boardService)) {
-            publisher.publishEvent(new UpdatePlayerDTO(this, event.getPlayer()));
-        }
-    }
+    private <D extends EventConvertible<E>, E extends ApplicationEvent>
+    void subscribeTo(String path, Persistence source, TypeReference responseTypeRef) {
+        stompSession.subscribe(path, new StompFrameHandler() {
 
-    @EventListener
-    public void BuyItems(BuyDTO event
-    ) {
-        if (event.getSource().equals(boardService)) {
-            publisher.publishEvent(new BuyDTO(this, event.getPlayer(), event.getItemPrices()));
-        }
-    }
+            @Override
+            public Type getPayloadType(StompHeaders stompHeaders) {
+                return byte[].class;
+            }
 
-    @EventListener
-    public void GameOver(GameOverDTO event
-    ) {
-        if (event.getSource().equals(boardService)) {
-            publisher.publishEvent(new GameOverDTO(this, event.getWinners()));
-        }
-    }*/
+            @Override
+            public void handleFrame(StompHeaders stompHeaders, Object o) {
+                ObjectMapper mapper = new ObjectMapper();
+                BoardResponse<D> response;
+                try {
+                    String json = new String((byte[]) o);
+                    response = mapper.readValue(json, responseTypeRef);
+                    if(response.isActionSuccessful()){
+                        D dto = response.getValue();
+                        E event = dto.toEvent(source);
+                        publisher.publishEvent(event);
+                    }
+                } catch (IOException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+    }
 }

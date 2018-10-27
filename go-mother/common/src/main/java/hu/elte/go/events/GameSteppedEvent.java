@@ -17,10 +17,16 @@ public class GameSteppedEvent extends ApplicationEvent {
         this.table = table;
     }
 
+    public GameSteppedEvent(Object source, GameSteppedEvent other) {
+        super(source);
+        this.currentPlayer = other.getCurrentPlayer();
+        this.table = other.getTable();
+    }
+
     public Player getCurrentPlayer() {
         return currentPlayer;
     }
-    
+
     public List<Field> getTable() {
         return table;
     }

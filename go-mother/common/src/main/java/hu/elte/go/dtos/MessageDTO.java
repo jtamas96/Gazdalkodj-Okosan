@@ -1,8 +1,10 @@
 package hu.elte.go.dtos;
 
-public class MessageDTO {
+import hu.elte.go.events.MessageEvent;
 
-    private final String message;
+public class MessageDTO implements EventConvertible<MessageEvent>{
+
+    private String message;
     
     public MessageDTO(String message) {
         this.message = message;
@@ -12,4 +14,15 @@ public class MessageDTO {
         return message;
     }
 
+    public MessageDTO(){
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    @Override
+    public MessageEvent toEvent(Object source) {
+        return new MessageEvent(source, message);
+    }
 }
