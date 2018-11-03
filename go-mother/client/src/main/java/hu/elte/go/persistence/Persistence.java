@@ -7,6 +7,7 @@ import hu.elte.go.BoardResponse;
 import hu.elte.go.data.Player;
 import hu.elte.go.data.enums.Item;
 import hu.elte.go.dtos.*;
+import hu.elte.go.events.ErrorEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
@@ -28,6 +29,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,22 +39,26 @@ public class Persistence implements IPersistence {
 
     private final ApplicationEventPublisher publisher;
     private StompSession stompSession;
+    private String clientUuid;
     Logger logger = Logger.getLogger(Persistence.class.getName());
 
     @Autowired
     public Persistence(ApplicationEventPublisher publisher) {
         this.publisher = publisher;
+        this.clientUuid = UUID.randomUUID().toString();
         try {
             ListenableFuture<StompSession> futureSession = connect();
             stompSession = futureSession.get();
-            subscribeTo("/newGameResponse", this, new TypeReference<BoardResponse<NewGameStartedDTO>>() {});
-            subscribeTo("/gameStepped", this, new TypeReference<BoardResponse<GameSteppedDTO>>() {});
-            subscribeTo("/switchPlayerResponse", this, new TypeReference<BoardResponse<PlayerSwitchedDTO>>() {});
-            subscribeTo("/messages", this, new TypeReference<BoardResponse<MessageDTO>>() {});
-            subscribeTo("/playerUpdates", this, new TypeReference<BoardResponse<PlayerUpdateDTO>>() {});
-            subscribeTo("/buyEvents", this, new TypeReference<BoardResponse<BuyDTO>>() {});
-            subscribeTo("/buyItemsResponse", this, new TypeReference<BoardResponse<PurchasedListDTO>>() {});
-            subscribeTo("/gameOver", this, new TypeReference<BoardResponse<GameOverDTO>>() {});
+            subscribeTo("/createPlayerResponse/" + clientUuid,
+                    this, new TypeReference<BoardResponse<PlayerCreationDTO>>() {});
+//            subscribeTo("/newGameResponse", this, new TypeReference<BoardResponse<NewGameStartedDTO>>() {});
+//            subscribeTo("/gameStepped", this, new TypeReference<BoardResponse<GameSteppedDTO>>() {});
+//            subscribeTo("/switchPlayerResponse", this, new TypeReference<BoardResponse<PlayerSwitchedDTO>>() {});
+//            subscribeTo("/messages", this, new TypeReference<BoardResponse<MessageDTO>>() {});
+//            subscribeTo("/playerUpdates", this, new TypeReference<BoardResponse<PlayerUpdateDTO>>() {});
+//            subscribeTo("/buyEvents", this, new TypeReference<BoardResponse<BuyDTO>>() {});
+//            subscribeTo("/buyItemsResponse", this, new TypeReference<BoardResponse<PurchasedListDTO>>() {});
+//            subscribeTo("/gameOver", this, new TypeReference<BoardResponse<GameOverDTO>>() {});
         } catch (InterruptedException | ExecutionException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
@@ -70,6 +76,13 @@ public class Persistence implements IPersistence {
 
         String url = "ws://{host}:{port}/go";
         return stompClient.connect(url, headers, new MyHandler(), "localhost", 8080);
+    }
+
+    @Override
+    public void createPlayer(String name) {
+        String json = "{}";
+        stompSession.send("/app/createPlayer/" + clientUuid + "/" + name, json.getBytes());
+        System.out.println("Sent");
     }
 
     @Override
@@ -138,6 +151,8 @@ public class Persistence implements IPersistence {
                         D dto = response.getValue();
                         E event = dto.toEvent(source);
                         publisher.publishEvent(event);
+                    } else {
+                        publisher.publishEvent(new ErrorEvent(source, response.getErrorMessage()));
                     }
                 } catch (IOException ex) {
                     logger.log(Level.SEVERE, null, ex);

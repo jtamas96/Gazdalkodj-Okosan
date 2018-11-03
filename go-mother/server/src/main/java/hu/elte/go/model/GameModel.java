@@ -13,9 +13,7 @@ import hu.elte.go.events.PlayerUpdateEvent;
 import hu.elte.go.exceptions.BuyException;
 import hu.elte.go.exceptions.PlayerNotFoundException;
 import hu.elte.go.exceptions.PlayerNumberException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
@@ -24,7 +22,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-@Component
 public class GameModel implements CardListener {
 
     private final ApplicationEventPublisher publisher;
@@ -35,36 +32,28 @@ public class GameModel implements CardListener {
     private List<FortuneCardEnum> fortuneCardDeck;
     private boolean gameOver;
 
-    @Autowired
     public GameModel(ApplicationEventPublisher publisher) {
         this.publisher = publisher;
         gameOver = false;
     }
 
-    public void newGame(int playerNumber) throws PlayerNumberException {
-        if (playerNumber >= 2 && playerNumber <= 6) {
-            players = new ArrayList<>();
-
-            for (int i = 0; i < playerNumber; i++) {
-                Player p = new Player(3000000, 0, 0, i, SaleItem.getInitialListForUser());
-                players.add(p);
-            }
-            currentPlayer = players.get(0);
-            table = new ArrayList<>();
-            table.add(new Field(0, new ArrayList<>(players)));
-            for (int i = 1; i < 42; i++) {
-                table.add(new Field(i, new ArrayList<>()));
-            }
-            fortuneCardDeck = new ArrayList<>();
-            fortuneCardDeck.addAll(Arrays.asList(FortuneCardEnum.values()));
-
-            fortuneCardDeck.forEach(card -> {
-                card.addListener(this);
-            });
-            Collections.shuffle(fortuneCardDeck);
-        } else {
-            throw new PlayerNumberException("Invalid number of players.");
+    public void newGame(List<Player> players) {
+        for(int i = 0; i< players.size(); i++){
+            players.get(i).setIndex(i);
         }
+        currentPlayer = players.get(0);
+        table = new ArrayList<>();
+        table.add(new Field(0, new ArrayList<>(players)));
+        for (int i = 1; i < 42; i++) {
+            table.add(new Field(i, new ArrayList<>()));
+        }
+        fortuneCardDeck = new ArrayList<>();
+        fortuneCardDeck.addAll(Arrays.asList(FortuneCardEnum.values()));
+
+        fortuneCardDeck.forEach(card -> {
+            card.addListener(this);
+        });
+        Collections.shuffle(fortuneCardDeck);
     }
 
     public void stepGame() {

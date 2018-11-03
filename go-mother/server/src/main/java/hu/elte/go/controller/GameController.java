@@ -1,15 +1,19 @@
 package hu.elte.go.controller;
 
+import hu.elte.go.ActivePlayers;
 import hu.elte.go.BoardResponse;
+import hu.elte.go.RoomsMapping;
 import hu.elte.go.data.Player;
 import hu.elte.go.data.enums.Item;
 import hu.elte.go.dtos.*;
 import hu.elte.go.events.*;
 import hu.elte.go.exceptions.BuyException;
-import hu.elte.go.exceptions.PlayerNumberException;
 import hu.elte.go.model.GameModel;
+import hu.elte.go.model.Room;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -17,59 +21,104 @@ import org.springframework.stereotype.Controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
 public class GameController {
 
-    private final GameModel gameModel;
+    private RoomsMapping roomsMapping;
+    private ActivePlayers playersMapping;
     private SimpMessagingTemplate template;
+    private ApplicationEventPublisher publisher;
 
     @Autowired
-    public GameController(GameModel gameModel, SimpMessagingTemplate template) {
-        this.gameModel = gameModel;
+    public GameController(RoomsMapping roomsMapping, ActivePlayers playersMapping, SimpMessagingTemplate template, ApplicationEventPublisher publisher) {
+        this.roomsMapping = roomsMapping;
+        this.playersMapping = playersMapping;
+        this.publisher = publisher;
         this.template = template;
     }
 
-    @MessageMapping("/step")
-    public void stepGame() {
-        gameModel.stepGame();
-    }
-
-    @MessageMapping("/newGame")
-    @SendTo("/newGameResponse")
-    public BoardResponse<NewGameStartedDTO> newGame(NewGameRequestDTO newGameRequestDTO) {
-        System.out.println("new game ms received");
-        try {
-            gameModel.newGame(newGameRequestDTO.getPlayerNumber());
-            List<Player> players = gameModel.getPlayers();
-            NewGameStartedDTO response = new NewGameStartedDTO(gameModel.getTable(), players, gameModel.getCurrentPlayer());
-            return new BoardResponse<>("", true, response);
-        } catch (PlayerNumberException ex) {
-            return new BoardResponse<>(ex.getMessage(), false, null);
+    @MessageMapping("/step/{roomUuid}/{userUuid}")
+    public void stepGame(@DestinationVariable String roomUuid, @DestinationVariable String userUuid) {
+        String userRoomUuid = roomsMapping.getUserRoom(userUuid);
+        if (!roomUuid.equals(userRoomUuid)) {
+            //TODO: Response: User not in this room.
+            return;
         }
+        Optional<GameModel> optGame = roomsMapping.getGame(roomUuid);
+        if (!optGame.isPresent()) {
+            // TODO: Response: game not started in this room.
+            return;
+        }
+        GameModel game = optGame.get();
+        game.stepGame(); //Add parameter to this method and check the id.
     }
 
-    @MessageMapping("/switchPlayer")
-    @SendTo("/switchPlayerResponse")
-    public BoardResponse<PlayerSwitchedDTO> switchPlayer(int playerIndex) {
-        if (gameModel.getCurrentPlayer().getIndex() == playerIndex) {
-            gameModel.switchPlayer();
-            PlayerSwitchedDTO playerDTO = new PlayerSwitchedDTO(gameModel.getCurrentPlayer());
+    @MessageMapping("/newGame/{roomUuid}/{initiatorUuid}")
+    @SendTo("/newGameResponse/{roomUuid}/{initiatorUuid}")
+    public BoardResponse<NewGameStartedDTO> initRoom(@DestinationVariable String roomUuid, @DestinationVariable String initiatorUuid) {
+        Optional<Room> optionalRoom = roomsMapping.getRoom(roomUuid);
+        if (!optionalRoom.isPresent()) {
+            return new BoardResponse<>("Room not exist.", false, null);
+        }
+        Room r = optionalRoom.get();
+        if (!r.getOwnerUuid().equals(initiatorUuid)) {
+            return new BoardResponse<>("Access denied.", false, null);
+        }
+        if (r.getPlayers().size() < 2) {
+            return new BoardResponse<>("Wait for more players.", false, null);
+        }
+        GameModel game = new GameModel(this.publisher);
+        game.newGame(r.getPlayers());
+        roomsMapping.saveRoom(r, game);
+
+        List<Player> players = game.getPlayers();
+        NewGameStartedDTO response = new NewGameStartedDTO(game.getTable(), players, game.getCurrentPlayer());
+        return new BoardResponse<>("", true, response);
+    }
+
+    @MessageMapping("/switchPlayer/{roomUuid}/{userUuid}")
+    @SendTo("/switchPlayerResponse/{roomUuid}/{userUuid}")
+    public BoardResponse<PlayerSwitchedDTO> switchPlayer(@DestinationVariable String roomUuid, @DestinationVariable String userUuid) {
+        String userRoomUuid = roomsMapping.getUserRoom(userUuid);
+        if (!roomUuid.equals(userRoomUuid)) {
+            return new BoardResponse<>("Access denied for this room!", false, null);
+        }
+        Optional<GameModel> optGame = roomsMapping.getGame(roomUuid);
+        if (!optGame.isPresent()) {
+            return new BoardResponse<>("Room not exist.", false, null);
+        }
+        GameModel game = optGame.get();
+        Player initiator = playersMapping.getPlayer(userUuid);
+        if (game.getCurrentPlayer().getIndex() == initiator.getIndex()) {
+            game.switchPlayer();
+            PlayerSwitchedDTO playerDTO = new PlayerSwitchedDTO(game.getCurrentPlayer());
             return new BoardResponse<>("", true, playerDTO);
         } else {
-            return new BoardResponse<>("Not your turn bro!", false, null);
+            return new BoardResponse<>("Not your turn!", false, null);
         }
     }
 
-    @MessageMapping("/buyItems")
-    @SendTo("/buyItemsResponse")
-    public BoardResponse<PurchasedListDTO> buyItems(ItemListDTO itemsDto) {
+    @MessageMapping("/buyItems/{roomUuid}/{userUuid}")
+    @SendTo("/buyItemsResponse/{roomUuid}/{userUuid}")
+    public BoardResponse<PurchasedListDTO> buyItems(
+            @DestinationVariable String roomUuid, @DestinationVariable String userUuid, ItemListDTO itemsDto) {
+        String userRoomUuid = roomsMapping.getUserRoom(userUuid);
+        if (!roomUuid.equals(userRoomUuid)) {
+            return new BoardResponse<>("Access denied for this room!", false, null);
+        }
+        Optional<GameModel> optGame = roomsMapping.getGame(roomUuid);
+        if (!optGame.isPresent()) {
+            return new BoardResponse<>("Room not exist.", false, null);
+        }
+        GameModel game = optGame.get();
         try {
             List<Item> wishList = itemsDto.getItemList().stream()
                     .map(Item::valueOf)
                     .collect(Collectors.toList());
-            List<Item> bought = gameModel.buyItems(wishList);
+            List<Item> bought = game.buyItems(wishList);
             Map<String, Integer> boughtMap = bought.stream()
                     .collect(Collectors.toMap(Enum::toString, Item::getCost));
             PurchasedListDTO responseDto = new PurchasedListDTO(boughtMap);

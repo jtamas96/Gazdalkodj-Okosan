@@ -33,7 +33,8 @@ public class ClientModel {
     }
 
     public void newGame(int playerNumber) {
-        persistence.requestNewGame(playerNumber);
+        // persistence.requestNewGame(playerNumber);
+        persistence.createPlayer("Proba");
     }
 
     public void stepGame() {
@@ -54,6 +55,13 @@ public class ClientModel {
 
     public void buyItems(List<String> itemsToPurchase) {
         persistence.buyItems(itemsToPurchase);
+    }
+
+    @EventListener
+    public void playerCreated(PlayerCreatedEvent event) {
+        if(event.getSource().equals(persistence)){
+            System.out.println("Player created");
+        }
     }
 
     @EventListener

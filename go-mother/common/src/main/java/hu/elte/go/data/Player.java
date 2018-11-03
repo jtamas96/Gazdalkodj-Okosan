@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class Player {
+    public String name;
 
     private int bankBalance;
     private int debt;
@@ -22,11 +23,11 @@ public class Player {
     private int immobilized;
     private boolean loser;
 
-    public Player(int bankBalance, int debt, int position, int index, List<SaleItem> items) {
+    public Player(int bankBalance, String name, List<SaleItem> items) {
         this.bankBalance = bankBalance;
-        this.debt = debt;
-        this.position = position;
-        this.index = index;
+        this.debt = 0;
+        this.position = 0;
+        this.index = 0;
         this.items = items;
         winner = false;
         withHouse = false;
@@ -35,6 +36,7 @@ public class Player {
         insurances = new HashSet<>();
         immobilized = 0;
         loser = false;
+        this.name = name;
     }
 
     public int getBankBalance() {
