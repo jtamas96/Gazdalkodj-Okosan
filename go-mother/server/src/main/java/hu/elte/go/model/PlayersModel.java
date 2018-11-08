@@ -1,18 +1,20 @@
-package hu.elte.go;
+package hu.elte.go.model;
 
 import hu.elte.go.data.Player;
 import hu.elte.go.data.SaleItem;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Component
-public class ActivePlayers {
-    private Map<String, Player> playersMap;
+public class PlayersModel {
+    private ConcurrentMap<String, Player> playersMap;
 
-    public ActivePlayers() {
-        this.playersMap = new HashMap<>();
+    @Autowired
+    public PlayersModel() {
+        this.playersMap = new ConcurrentHashMap<>();
     }
 
     public Player getPlayer(String uuid) {
@@ -26,5 +28,9 @@ public class ActivePlayers {
 
     public void deletePlayer(String playerUuid) {
         this.playersMap.remove(playerUuid);
+    }
+    
+    public ConcurrentMap<String, Player> getPlayersMap() {
+        return playersMap;
     }
 }

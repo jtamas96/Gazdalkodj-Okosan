@@ -1,15 +1,15 @@
 package hu.elte.go.controller;
 
-import hu.elte.go.ActivePlayers;
 import hu.elte.go.BoardResponse;
-import hu.elte.go.RoomsMapping;
+import hu.elte.go.model.RoomModel;
 import hu.elte.go.data.Player;
 import hu.elte.go.data.enums.Item;
 import hu.elte.go.dtos.*;
 import hu.elte.go.events.*;
 import hu.elte.go.exceptions.BuyException;
 import hu.elte.go.model.GameModel;
-import hu.elte.go.model.Room;
+import hu.elte.go.model.PlayersModel;
+import hu.elte.go.data.Room;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
@@ -27,27 +27,27 @@ import java.util.stream.Collectors;
 @Controller
 public class GameController {
 
-    private RoomsMapping roomsMapping;
-    private ActivePlayers playersMapping;
+    private RoomModel roomModel;
+    private PlayersModel playersModel;
     private SimpMessagingTemplate template;
     private ApplicationEventPublisher publisher;
 
     @Autowired
-    public GameController(RoomsMapping roomsMapping, ActivePlayers playersMapping, SimpMessagingTemplate template, ApplicationEventPublisher publisher) {
-        this.roomsMapping = roomsMapping;
-        this.playersMapping = playersMapping;
+    public GameController(RoomModel roomModel, PlayersModel playersModel, SimpMessagingTemplate template, ApplicationEventPublisher publisher) {
+        this.roomModel = roomModel;
+        this.playersModel = playersModel;
         this.publisher = publisher;
         this.template = template;
     }
 
     @MessageMapping("/step/{roomUuid}/{userUuid}")
     public void stepGame(@DestinationVariable String roomUuid, @DestinationVariable String userUuid) {
-        String userRoomUuid = roomsMapping.getUserRoom(userUuid);
+        String userRoomUuid = roomModel.getUserRoom(userUuid);
         if (!roomUuid.equals(userRoomUuid)) {
             //TODO: Response: User not in this room.
             return;
         }
-        Optional<GameModel> optGame = roomsMapping.getGame(roomUuid);
+        Optional<GameModel> optGame = roomModel.getGame(roomUuid);
         if (!optGame.isPresent()) {
             // TODO: Response: game not started in this room.
             return;
@@ -59,7 +59,7 @@ public class GameController {
     @MessageMapping("/newGame/{roomUuid}/{initiatorUuid}")
     @SendTo("/newGameResponse/{roomUuid}/{initiatorUuid}")
     public BoardResponse<NewGameStartedDTO> initRoom(@DestinationVariable String roomUuid, @DestinationVariable String initiatorUuid) {
-        Optional<Room> optionalRoom = roomsMapping.getRoom(roomUuid);
+        Optional<Room> optionalRoom = roomModel.getRoom(roomUuid);
         if (!optionalRoom.isPresent()) {
             return new BoardResponse<>("Room not exist.", false, null);
         }
@@ -72,7 +72,7 @@ public class GameController {
         }
         GameModel game = new GameModel(this.publisher);
         game.newGame(r.getPlayers());
-        roomsMapping.saveRoom(r, game);
+        roomModel.saveRoom(r, game);
 
         List<Player> players = game.getPlayers();
         NewGameStartedDTO response = new NewGameStartedDTO(game.getTable(), players, game.getCurrentPlayer());
@@ -82,16 +82,16 @@ public class GameController {
     @MessageMapping("/switchPlayer/{roomUuid}/{userUuid}")
     @SendTo("/switchPlayerResponse/{roomUuid}/{userUuid}")
     public BoardResponse<PlayerSwitchedDTO> switchPlayer(@DestinationVariable String roomUuid, @DestinationVariable String userUuid) {
-        String userRoomUuid = roomsMapping.getUserRoom(userUuid);
+        String userRoomUuid = roomModel.getUserRoom(userUuid);
         if (!roomUuid.equals(userRoomUuid)) {
             return new BoardResponse<>("Access denied for this room!", false, null);
         }
-        Optional<GameModel> optGame = roomsMapping.getGame(roomUuid);
+        Optional<GameModel> optGame = roomModel.getGame(roomUuid);
         if (!optGame.isPresent()) {
             return new BoardResponse<>("Room not exist.", false, null);
         }
         GameModel game = optGame.get();
-        Player initiator = playersMapping.getPlayer(userUuid);
+        Player initiator = playersModel.getPlayer(userUuid);
         if (game.getCurrentPlayer().getIndex() == initiator.getIndex()) {
             game.switchPlayer();
             PlayerSwitchedDTO playerDTO = new PlayerSwitchedDTO(game.getCurrentPlayer());
@@ -105,11 +105,11 @@ public class GameController {
     @SendTo("/buyItemsResponse/{roomUuid}/{userUuid}")
     public BoardResponse<PurchasedListDTO> buyItems(
             @DestinationVariable String roomUuid, @DestinationVariable String userUuid, ItemListDTO itemsDto) {
-        String userRoomUuid = roomsMapping.getUserRoom(userUuid);
+        String userRoomUuid = roomModel.getUserRoom(userUuid);
         if (!roomUuid.equals(userRoomUuid)) {
             return new BoardResponse<>("Access denied for this room!", false, null);
         }
-        Optional<GameModel> optGame = roomsMapping.getGame(roomUuid);
+        Optional<GameModel> optGame = roomModel.getGame(roomUuid);
         if (!optGame.isPresent()) {
             return new BoardResponse<>("Room not exist.", false, null);
         }

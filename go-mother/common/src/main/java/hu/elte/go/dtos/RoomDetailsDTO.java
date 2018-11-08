@@ -5,9 +5,9 @@ import java.util.List;
 public class RoomDetailsDTO {
     public String name;
     public String uuid;
-    public List<PlayerDTO> players;
+    public List<String> players;
 
-    public RoomDetailsDTO(String name, String uuid, List<PlayerDTO> players) {
+    public RoomDetailsDTO(String name, String uuid, List<String> players) {
         this.name = name;
         this.uuid = uuid;
         this.players = players;
@@ -23,7 +23,7 @@ public class RoomDetailsDTO {
         this.uuid = uuid;
     }
 
-    public void setPlayers(List<PlayerDTO> players) {
+    public void setPlayers(List<String> players) {
         this.players = players;
     }
 }

@@ -12,7 +12,6 @@ import hu.elte.go.events.MessageEvent;
 import hu.elte.go.events.PlayerUpdateEvent;
 import hu.elte.go.exceptions.BuyException;
 import hu.elte.go.exceptions.PlayerNotFoundException;
-import hu.elte.go.exceptions.PlayerNumberException;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.AbstractMap.SimpleEntry;

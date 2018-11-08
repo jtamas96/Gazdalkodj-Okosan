@@ -1,25 +1,26 @@
-package hu.elte.go;
+package hu.elte.go.model;
 
+import hu.elte.go.data.Room;
 import hu.elte.go.dtos.PlayerDTO;
 import hu.elte.go.dtos.RoomDetailsDTO;
 import hu.elte.go.dtos.RoomListDTO;;
-import hu.elte.go.model.GameModel;
-import hu.elte.go.model.Room;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 @Component
-public class RoomsMapping {
-    private Map<Room, GameModel> roomsMapToGameModel;
-    private Map<String, String> usersMapToRooms;
+public class RoomModel {
+    private ConcurrentMap<Room, GameModel> roomsMapToGameModel;
+    private ConcurrentMap<String, String> usersMapToRooms;
 
     @Autowired
-    public RoomsMapping() {
-        this.roomsMapToGameModel = new HashMap<>();
-        this.usersMapToRooms = new HashMap<>();
+    public RoomModel() {
+        this.roomsMapToGameModel = new ConcurrentHashMap<>();
+        this.usersMapToRooms = new ConcurrentHashMap<>();
     }
 
     public void saveRoom(Room room, GameModel game) {
@@ -41,13 +42,13 @@ public class RoomsMapping {
 
     public RoomListDTO toRoomListDTO(){
         RoomListDTO result = new RoomListDTO(new ArrayList<>());
-        for (Room room: roomsMapToGameModel.keySet()) {
+        roomsMapToGameModel.keySet().forEach((room) -> {
             GameModel g = roomsMapToGameModel.get(room);
-            List<PlayerDTO> players = g.getPlayers().stream()
-                    .map(player -> new PlayerDTO(player.name))
+            List<String> playerNames = g.getPlayers().stream()
+                    .map(player -> player.getName())
                     .collect(Collectors.toList());
-            result.rooms.add(new RoomDetailsDTO(room.getName(), room.getUuid(), players));
-        }
+            result.rooms.add(new RoomDetailsDTO(room.getName(), room.getUuid(), playerNames));
+        });
         return result;
     }
 

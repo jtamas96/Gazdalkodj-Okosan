@@ -1,4 +1,4 @@
-package hu.elte.go.model;
+package hu.elte.go.data;
 
 import hu.elte.go.data.Player;
 import hu.elte.go.dtos.PlayerDTO;
@@ -38,10 +38,10 @@ public class Room {
     }
 
     public RoomDetailsDTO roomDTO() {
-        List<PlayerDTO> playerDTOS = players.stream()
-                .map(p -> new PlayerDTO(p.name))
+        List<String> playerNames = players.stream()
+                .map(p -> p.getName())
                 .collect(Collectors.toList());
-        return new RoomDetailsDTO(name, uuid, playerDTOS);
+        return new RoomDetailsDTO(name, uuid, playerNames);
     }
 
     @Override
