@@ -1,7 +1,5 @@
 package hu.elte.go.data;
 
-import hu.elte.go.data.Player;
-import hu.elte.go.dtos.PlayerDTO;
 import hu.elte.go.dtos.RoomDetailsDTO;
 
 import java.util.List;

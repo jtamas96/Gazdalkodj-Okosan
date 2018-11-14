@@ -70,7 +70,7 @@ public class GameController {
         if (r.getPlayers().size() < 2) {
             return new BoardResponse<>("Wait for more players.", false, null);
         }
-        GameModel game = new GameModel(this.publisher);
+        GameModel game = new GameModel(this.publisher, roomUuid);
         game.newGame(r.getPlayers());
         roomModel.saveRoom(r, game);
 
@@ -130,36 +130,56 @@ public class GameController {
 
     @EventListener
     public void gameStepped(GameSteppedEvent event) {
-        GameSteppedDTO dto = new GameSteppedDTO(event.getCurrentPlayer(), event.getTable());
-        BoardResponse<GameSteppedDTO> response = new BoardResponse<>("", true, dto);
-        this.template.convertAndSend("/gameStepped", response);
+        if (event.getSource() instanceof GameModel) {
+            GameSteppedDTO dto = new GameSteppedDTO(event.getCurrentPlayer(), event.getTable());
+            BoardResponse<GameSteppedDTO> response = new BoardResponse<>("", true, dto);
+            GameModel gameModel = (GameModel) event.getSource();
+            String roomUuid = gameModel.getRoomUuid();
+            this.template.convertAndSend("/gameStepped/" + roomUuid, response);
+        }
     }
 
     @EventListener
     public void sendMessage(MessageEvent event) {
-        MessageDTO dto = new MessageDTO(event.getMessage());
-        BoardResponse<MessageDTO> response = new BoardResponse<>("", true, dto);
-        this.template.convertAndSend("/messages", response);
+        if (event.getSource() instanceof GameModel) {
+            MessageDTO dto = new MessageDTO(event.getMessage());
+            BoardResponse<MessageDTO> response = new BoardResponse<>("", true, dto);
+            GameModel gameModel = (GameModel) event.getSource();
+            String roomUuid = gameModel.getRoomUuid();
+            this.template.convertAndSend("/messages/" + roomUuid, response);
+        }
     }
 
     @EventListener
     public void updatePlayer(PlayerUpdateEvent event) {
-        PlayerUpdateDTO dto = new PlayerUpdateDTO(event.getPlayer());
-        BoardResponse<PlayerUpdateDTO> response = new BoardResponse<>("", true, dto);
-        this.template.convertAndSend("/playerUpdates", response);
+        if (event.getSource() instanceof GameModel) {
+            PlayerUpdateDTO dto = new PlayerUpdateDTO(event.getPlayer());
+            BoardResponse<PlayerUpdateDTO> response = new BoardResponse<>("", true, dto);
+            GameModel gameModel = (GameModel) event.getSource();
+            String roomUuid = gameModel.getRoomUuid();
+            this.template.convertAndSend("/playerUpdates/" + roomUuid, response);
+        }
     }
 
     @EventListener
     public void buyEvent(BuyEvent event) {
-        BuyDTO dto = new BuyDTO(event.getPlayer(), event.getItemPrices());
-        BoardResponse<BuyDTO> response = new BoardResponse<>("", true, dto);
-        this.template.convertAndSend("/buyEvents", response);
+        if (event.getSource() instanceof GameModel) {
+            BuyDTO dto = new BuyDTO(event.getPlayer(), event.getItemPrices());
+            BoardResponse<BuyDTO> response = new BoardResponse<>("", true, dto);
+            GameModel gameModel = (GameModel) event.getSource();
+            String roomUuid = gameModel.getRoomUuid();
+            this.template.convertAndSend("/buyEvents/" + roomUuid, response);
+        }
     }
 
     @EventListener
     public void gameOver(GameOverEvent event) {
-        GameOverDTO dto = new GameOverDTO(event.getWinners());
-        BoardResponse<GameOverDTO> response = new BoardResponse<>("", true, dto);
-        this.template.convertAndSend("/gameOver", response);
+        if (event.getSource() instanceof GameModel) {
+            GameOverDTO dto = new GameOverDTO(event.getWinners());
+            BoardResponse<GameOverDTO> response = new BoardResponse<>("", true, dto);
+            GameModel gameModel = (GameModel) event.getSource();
+            String roomUuid = gameModel.getRoomUuid();
+            this.template.convertAndSend("/gameOver/" + roomUuid, response);
+        }
     }
 }

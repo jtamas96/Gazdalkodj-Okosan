@@ -9,13 +9,14 @@ import hu.elte.go.dtos.RoomDetailsDTO;
 import hu.elte.go.dtos.RoomListDTO;
 import hu.elte.go.model.PlayersModel;
 import hu.elte.go.data.Room;
+import java.util.ArrayList;
+import java.util.Collections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -45,7 +46,7 @@ public class RoomController {
             return new BoardResponse<>("Player does not exist.", false, null);
         }
         String roomUuid = UUID.randomUUID().toString();
-        List<Player> players = new ArrayList<>();
+        List<Player> players = Collections.synchronizedList( new ArrayList<>());
         players.add(owner);
         Room newRoom = new Room(roomUuid, name, ownerUuid, players);
         roomModel.saveRoom(newRoom, null);
