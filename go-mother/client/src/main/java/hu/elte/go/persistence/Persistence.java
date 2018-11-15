@@ -42,23 +42,31 @@ public class Persistence implements IPersistence {
     @Autowired
     public Persistence(ApplicationEventPublisher publisher) {
         this.publisher = publisher;
+    }
+
+    @Override
+    public void connect(String IPAddress) {
         try {
-            ListenableFuture<StompSession> futureSession = connect();
+            ListenableFuture<StompSession> futureSession = connectToServer(IPAddress);
             stompSession = futureSession.get();
-            subscribeTo("/newGameResponse", this, new TypeReference<BoardResponse<NewGameStartedDTO>>() {});
-            subscribeTo("/gameStepped", this, new TypeReference<BoardResponse<GameSteppedDTO>>() {});
-            subscribeTo("/switchPlayerResponse", this, new TypeReference<BoardResponse<PlayerSwitchedDTO>>() {});
-            subscribeTo("/messages", this, new TypeReference<BoardResponse<MessageDTO>>() {});
-            subscribeTo("/playerUpdates", this, new TypeReference<BoardResponse<PlayerUpdateDTO>>() {});
-            subscribeTo("/buyEvents", this, new TypeReference<BoardResponse<BuyDTO>>() {});
-            subscribeTo("/buyItemsResponse", this, new TypeReference<BoardResponse<PurchasedListDTO>>() {});
-            subscribeTo("/gameOver", this, new TypeReference<BoardResponse<GameOverDTO>>() {});
+            subscribeToEvents();
         } catch (InterruptedException | ExecutionException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
     }
-
-    private ListenableFuture<StompSession> connect() {
+    
+    public void subscribeToEvents() {
+        subscribeTo("/newGameResponse", this, new TypeReference<BoardResponse<NewGameStartedDTO>>() {});
+        subscribeTo("/gameStepped", this, new TypeReference<BoardResponse<GameSteppedDTO>>() {});
+        subscribeTo("/switchPlayerResponse", this, new TypeReference<BoardResponse<PlayerSwitchedDTO>>() {});
+        subscribeTo("/messages", this, new TypeReference<BoardResponse<MessageDTO>>() {});
+        subscribeTo("/playerUpdates", this, new TypeReference<BoardResponse<PlayerUpdateDTO>>() {});
+        subscribeTo("/buyEvents", this, new TypeReference<BoardResponse<BuyDTO>>() {});
+        subscribeTo("/buyItemsResponse", this, new TypeReference<BoardResponse<PurchasedListDTO>>() {});
+        subscribeTo("/gameOver", this, new TypeReference<BoardResponse<GameOverDTO>>() {});
+    }
+    
+    private ListenableFuture<StompSession> connectToServer(String IPAddress) {
         WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
         Transport webSocketTransport = new WebSocketTransport(new StandardWebSocketClient());
         List<Transport> transports = Collections.singletonList(webSocketTransport);
@@ -69,7 +77,7 @@ public class Persistence implements IPersistence {
         WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
 
         String url = "ws://{host}:{port}/go";
-        return stompClient.connect(url, headers, new MyHandler(), "localhost", 8080);
+        return stompClient.connect(url, headers, new MyHandler(), IPAddress, 8080);
     }
 
     @Override

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.Pane?>
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="135.0" prefWidth="329.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hu.elte.go.controllers.IPPromptController">
+   <children>
+      <TextField fx:id="IPAddress" layoutX="90.0" layoutY="55.0" />
+      <Label layoutX="123.0" layoutY="14.0" text="Szerver IP címe:" />
+      <Button fx:id="OKButton" layoutX="129.0" layoutY="96.0" mnemonicParsing="false" onAction="#OKPressed" prefHeight="25.0" prefWidth="71.0" text="OK" />
+   </children>
+</Pane>

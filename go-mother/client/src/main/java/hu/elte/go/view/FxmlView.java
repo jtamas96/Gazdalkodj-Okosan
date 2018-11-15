@@ -12,7 +12,7 @@ public enum FxmlView {
 
         @Override
         String getFxmlFile() {
-            return "/fxml/Starter.fxml";
+            return "/fxml/IPPrompt.fxml";
         }
     }, BOARD {
         @Override

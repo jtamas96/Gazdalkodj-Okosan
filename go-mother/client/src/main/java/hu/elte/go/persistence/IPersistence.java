@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface IPersistence {
     
+    void connect(String IPAddress);
+    
     void requestNewGame(int playerNumber);
     
     void requestStep();
