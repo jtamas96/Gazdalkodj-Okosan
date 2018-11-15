@@ -5,20 +5,25 @@
  */
 package hu.elte.go.controllers;
 
+import hu.elte.go.events.ConnectToServer;
 import hu.elte.go.events.NewGameStartedEvent;
 import hu.elte.go.model.ClientModel;
 import hu.elte.go.view.FxmlView;
 import hu.elte.go.view.StageManager;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.util.Duration;
+import org.controlsfx.control.Notifications;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
 import java.net.URL;
@@ -29,7 +34,7 @@ import java.util.ResourceBundle;
  *
  * @author sando
  */
-@Component
+@Controller
 public class StarterController implements Initializable {
     Parent parent;
 
@@ -62,10 +67,29 @@ public class StarterController implements Initializable {
     }
 
     @EventListener
-    public void NewGameStarted(NewGameStartedEvent event) {
+    public void connectedToServer(ConnectToServer event) {
+        Platform.runLater(() -> {
+            if(event.isSuccessful()){
+                stageManager.switchScene(FxmlView.USERNAME);
+            } else {
+                Notifications notification = Notifications.create()
+                        .title(getStringFromResourceBundle("window.connect.error.title"))
+                        .text(getStringFromResourceBundle("window.connect.error.text"))
+                        .hideAfter(Duration.seconds(3))
+                        .position(Pos.CENTER);
+                notification.showError();
+            }
+        });
+    }
+
+    @EventListener
+    public void newGameStarted(NewGameStartedEvent event) {
         if (event.getSource().equals(clientModel)) {
             stageManager.switchScene(FxmlView.BOARD);
         }
     }
 
+    String getStringFromResourceBundle(String key){
+        return ResourceBundle.getBundle("Bundle").getString(key);
+    }
 }

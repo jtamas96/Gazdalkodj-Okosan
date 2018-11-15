@@ -9,9 +9,6 @@ import hu.elte.go.events.NewGameStartedEvent;
 import hu.elte.go.model.ClientModel;
 import hu.elte.go.view.FxmlView;
 import hu.elte.go.view.StageManager;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -21,14 +18,18 @@ import javafx.scene.control.TextField;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 
 /**
  * FXML Controller class
  *
  * @author Sandor
  */
-@Component
+@Controller
 public class IPPromptController implements Initializable {
 
     
@@ -60,7 +61,6 @@ public class IPPromptController implements Initializable {
     @FXML
     private void OKPressed(ActionEvent event) throws IOException {
         clientModel.connect(IPAddress.getText());
-        clientModel.newGame(4);
     }
 
     @EventListener

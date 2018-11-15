@@ -7,12 +7,22 @@ public enum FxmlView {
     STARTER {
         @Override
         String getTitle() {
-            return getStringFromResourceBundle("app.title");
+            return getStringFromResourceBundle("window.connect.title");
         }
 
         @Override
         String getFxmlFile() {
             return "/fxml/IPPrompt.fxml";
+        }
+    }, USERNAME {
+        @Override
+        String getTitle() {
+            return getStringFromResourceBundle("window.username.title");
+        }
+
+        @Override
+        String getFxmlFile() {
+            return "/fxml/NamePrompt.fxml";
         }
     }, BOARD {
         @Override
