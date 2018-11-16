@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Pane;
 
 /**
  * FXML Controller class
@@ -66,6 +67,9 @@ public class GameBoardController implements Initializable {
     @FXML
     Label message;
 
+    @FXML
+    Pane gameBoard;
+    
     @FXML
     ListView<Map.Entry<String, Integer>> shoppingList;
 
@@ -135,7 +139,8 @@ public class GameBoardController implements Initializable {
         ImageView playerPawn = pawnList.get(index);
         int position = currentPlayer.getPosition();
         playerPawn.setLayoutX(PawnPosition.calcX(position, index));
-        playerPawn.setLayoutY(PawnPosition.calcY(position, index));
+        System.out.println("parent size: " + gameBoard.getHeight());
+        playerPawn.setLayoutY(PawnPosition.calcResponsiveY(position, index, (int)gameBoard.getHeight()));
     }
 
     private void populatePurchasedList(Player currentPlayer) {

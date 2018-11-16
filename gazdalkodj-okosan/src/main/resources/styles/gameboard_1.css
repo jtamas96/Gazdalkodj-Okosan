@@ -4,9 +4,7 @@
 
 #gameBoard {
     -fx-background-image: url("../images/mezok.jpg");
-    -fx-background-repeat: stretch;   
-    -fx-background-size: auto 100%;
-    -fx-background-position: center center;
+    -fx-background-size: 60% auto;
     -fx-effect: dropshadow(three-pass-box, black, 30, 0.5, 0, 0);
 }
 
