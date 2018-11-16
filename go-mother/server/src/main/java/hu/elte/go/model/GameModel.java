@@ -30,18 +30,20 @@ public class GameModel implements CardListener {
     private Player lastStepped;
     private List<FortuneCardEnum> fortuneCardDeck;
     private boolean gameOver;
+    private String roomUuid;
 
-    public GameModel(ApplicationEventPublisher publisher) {
+    public GameModel(ApplicationEventPublisher publisher, String roomUuid) {
         this.publisher = publisher;
+        this.roomUuid = roomUuid;
         gameOver = false;
     }
 
     public void newGame(List<Player> players) {
-        for(int i = 0; i< players.size(); i++){
+        for (int i = 0; i < players.size(); i++) {
             players.get(i).setIndex(i);
         }
         currentPlayer = players.get(0);
-        table = new ArrayList<>();
+        table = Collections.synchronizedList(new ArrayList<>());
         table.add(new Field(0, new ArrayList<>(players)));
         for (int i = 1; i < 42; i++) {
             table.add(new Field(i, new ArrayList<>()));
@@ -56,15 +58,17 @@ public class GameModel implements CardListener {
     }
 
     public void stepGame() {
-        if (gameOver || currentPlayer.equals(lastStepped)) {
-            return;
-        }
+        synchronized (this) {
+            if (gameOver || currentPlayer.equals(lastStepped)) {
+                return;
+            }
 
-        lastStepped = currentPlayer;
-        Random random = new Random();
-        int step = random.nextInt(6) + 1;
-        stepForward(step);
-        System.out.println("Game stepped. Current player at field: " + currentPlayer.getPosition());
+            lastStepped = currentPlayer;
+            Random random = new Random();
+            int step = random.nextInt(6) + 1;
+            stepForward(step);
+            System.out.println("Game stepped. Current player at field: " + currentPlayer.getPosition());
+        }
     }
 
     private void playerSteppedOnStart(boolean exact) {
@@ -82,6 +86,10 @@ public class GameModel implements CardListener {
 
     public Player getCurrentPlayer() {
         return currentPlayer;
+    }
+
+    public String getRoomUuid() {
+        return roomUuid;
     }
 
     public boolean isGameOverForPlayer(Player player) {
@@ -438,13 +446,13 @@ public class GameModel implements CardListener {
         fortuneCardDeck.remove(last);
         fortuneCardDeck.add(0, fc);
     }
-    
+
     public List<Item> buyItems(List<Item> itemList) throws BuyException {
         List<Item> purchasedNow = new ArrayList<>();
         List<Item> notEnoughMoneyFor = new ArrayList<>();
         itemList.forEach((item) -> {
             SaleItem currentItem = currentPlayer.getItem(item).get(); //TODO: What if not found?
-            if (! currentItem.isPurchased()) {
+            if (!currentItem.isPurchased()) {
                 //                return new BoardResponse<>("You want more than one from: " + item.name() + " ?", false, null);
 
                 int bankBalance = currentPlayer.getBankBalance();
@@ -453,7 +461,7 @@ public class GameModel implements CardListener {
                     currentPlayer.setBankBalance(bankBalance - currentPrice);
 
                     currentItem.purchase();
-                    if(item.insurrance){
+                    if (item.insurrance) {
                         currentPlayer.getInsurances().add(item);
                     }
                     purchasedNow.add(item);
