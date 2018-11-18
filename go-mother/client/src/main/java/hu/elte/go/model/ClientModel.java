@@ -32,6 +32,10 @@ public class ClientModel {
         this.gameOver = false;
     }
 
+    public void connect(String IPAddress) {
+        persistence.connect(IPAddress);
+    }
+    
     public void newGame(int playerNumber) {
         // persistence.requestNewGame(playerNumber);
         persistence.createPlayer("Proba");

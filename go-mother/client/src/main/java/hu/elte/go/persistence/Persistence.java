@@ -4,9 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.elte.go.BoardResponse;
-import hu.elte.go.data.Player;
-import hu.elte.go.data.enums.Item;
-import hu.elte.go.dtos.*;
+import hu.elte.go.dtos.EventConvertible;
+import hu.elte.go.dtos.ItemListDTO;
+import hu.elte.go.dtos.NewGameRequestDTO;
+import hu.elte.go.dtos.PlayerCreationDTO;
+import hu.elte.go.events.ConnectToServer;
 import hu.elte.go.events.ErrorEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
@@ -38,7 +40,7 @@ import java.util.logging.Logger;
 public class Persistence implements IPersistence {
 
     private final ApplicationEventPublisher publisher;
-    private StompSession stompSession;
+    private MyStompSessionHandler stompSessionHandler;
     private String clientUuid;
     Logger logger = Logger.getLogger(Persistence.class.getName());
 
@@ -46,25 +48,35 @@ public class Persistence implements IPersistence {
     public Persistence(ApplicationEventPublisher publisher) {
         this.publisher = publisher;
         this.clientUuid = UUID.randomUUID().toString();
+        stompSessionHandler = new MyStompSessionHandler();
+    }
+
+    @Override
+    public void connect(String IPAddress) {
         try {
-            ListenableFuture<StompSession> futureSession = connect();
-            stompSession = futureSession.get();
-            subscribeTo("/createPlayerResponse/" + clientUuid,
-                    this, new TypeReference<BoardResponse<PlayerCreationDTO>>() {});
-//            subscribeTo("/newGameResponse", this, new TypeReference<BoardResponse<NewGameStartedDTO>>() {});
-//            subscribeTo("/gameStepped", this, new TypeReference<BoardResponse<GameSteppedDTO>>() {});
-//            subscribeTo("/switchPlayerResponse", this, new TypeReference<BoardResponse<PlayerSwitchedDTO>>() {});
-//            subscribeTo("/messages", this, new TypeReference<BoardResponse<MessageDTO>>() {});
-//            subscribeTo("/playerUpdates", this, new TypeReference<BoardResponse<PlayerUpdateDTO>>() {});
-//            subscribeTo("/buyEvents", this, new TypeReference<BoardResponse<BuyDTO>>() {});
-//            subscribeTo("/buyItemsResponse", this, new TypeReference<BoardResponse<PurchasedListDTO>>() {});
-//            subscribeTo("/gameOver", this, new TypeReference<BoardResponse<GameOverDTO>>() {});
-        } catch (InterruptedException | ExecutionException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            connectToServer(IPAddress).get();
+            subscribeToEvents();
+        } catch (ExecutionException ex) {
+            publisher.publishEvent(new ConnectToServer(this, false));
+        } catch (InterruptedException ex) {
+            logger.log(Level.SEVERE, "Connection interrupted", ex);
         }
     }
 
-    private ListenableFuture<StompSession> connect() {
+    public void subscribeToEvents() {
+        subscribeTo("/createPlayerResponse/" + clientUuid,
+                this, new TypeReference<BoardResponse<PlayerCreationDTO>>() {});
+//        subscribeTo("/newGameResponse", this, new TypeReference<BoardResponse<NewGameStartedDTO>>() {});
+//        subscribeTo("/gameStepped", this, new TypeReference<BoardResponse<GameSteppedDTO>>() {});
+//        subscribeTo("/switchPlayerResponse", this, new TypeReference<BoardResponse<PlayerSwitchedDTO>>() {});
+//        subscribeTo("/messages", this, new TypeReference<BoardResponse<MessageDTO>>() {});
+//        subscribeTo("/playerUpdates", this, new TypeReference<BoardResponse<PlayerUpdateDTO>>() {});
+//        subscribeTo("/buyEvents", this, new TypeReference<BoardResponse<BuyDTO>>() {});
+//        subscribeTo("/buyItemsResponse", this, new TypeReference<BoardResponse<PurchasedListDTO>>() {});
+//        subscribeTo("/gameOver", this, new TypeReference<BoardResponse<GameOverDTO>>() {});
+    }
+
+    private ListenableFuture<StompSession> connectToServer(String IPAddress) {
         WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
         Transport webSocketTransport = new WebSocketTransport(new StandardWebSocketClient());
         List<Transport> transports = Collections.singletonList(webSocketTransport);
@@ -75,11 +87,12 @@ public class Persistence implements IPersistence {
         WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
 
         String url = "ws://{host}:{port}/go";
-        return stompClient.connect(url, headers, new MyHandler(), "localhost", 8080);
+        return stompClient.connect(url, headers, stompSessionHandler, IPAddress, 8080);
     }
 
     @Override
     public void createPlayer(String name) {
+        StompSession stompSession = stompSessionHandler.getSession();
         String json = "{}";
         stompSession.send("/app/createPlayer/" + clientUuid + "/" + name, json.getBytes());
         System.out.println("Sent");
@@ -87,6 +100,7 @@ public class Persistence implements IPersistence {
 
     @Override
     public void requestNewGame(int playerNumber) {
+        StompSession stompSession = stompSessionHandler.getSession();
         NewGameRequestDTO ngr = new NewGameRequestDTO(playerNumber);
         ObjectMapper mapper = new ObjectMapper();
         String json;
@@ -100,18 +114,21 @@ public class Persistence implements IPersistence {
 
     @Override
     public void requestStep() {
+        StompSession stompSession = stompSessionHandler.getSession();
         String json = "{}";
         stompSession.send("/app/step", json.getBytes());
     }
 
     @Override
     public void switchPlayer(int currentPlayerIndex) {
+        StompSession stompSession = stompSessionHandler.getSession();
         String json = "" + currentPlayerIndex;
         stompSession.send("/app/switchPlayer", json.getBytes());
     }
 
     @Override
     public void buyItems(List<String> itemsToPurchase) {
+        StompSession stompSession = stompSessionHandler.getSession();
         ItemListDTO dto = new ItemListDTO(itemsToPurchase);
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -123,16 +140,23 @@ public class Persistence implements IPersistence {
         }
     }
 
-    private class MyHandler extends StompSessionHandlerAdapter {
+    private class MyStompSessionHandler extends StompSessionHandlerAdapter {
+        private StompSession session;
+        public StompSession getSession() {
+            return session;
+        }
 
         @Override
         public void afterConnected(StompSession stompSession, StompHeaders stompHeaders) {
             System.out.println("Now connected");
+            session = stompSession;
+            publisher.publishEvent(new ConnectToServer(this, true));
         }
     }
 
     private <D extends EventConvertible<E>, E extends ApplicationEvent>
     void subscribeTo(String path, Persistence source, TypeReference responseTypeRef) {
+        StompSession stompSession = stompSessionHandler.getSession();
         stompSession.subscribe(path, new StompFrameHandler() {
 
             @Override

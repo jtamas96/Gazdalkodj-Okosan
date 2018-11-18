@@ -51,4 +51,15 @@ public class PawnPosition {
         } else
             return Y_START_35_TO_41 + STEP_SIZE * (fieldNum - 35);
     }
+    
+    public static int calcResponsiveY(int fieldNum, int index, int boardHeight) {
+        if (fieldNum >= 0 && fieldNum <= 13) {
+            return boardHeight - boardHeight / 100 * 11 - DISTANCE * (index - 1);
+        } else if (fieldNum >= 14 && fieldNum <= 20) {
+            return Y_START_14_TO_20 - STEP_SIZE * (fieldNum - 14);
+        } else if (fieldNum >= 21 && fieldNum <= 34) {
+            return Y_START_21_TO_34 - DISTANCE * (index - 1);
+        } else
+            return Y_START_35_TO_41 + STEP_SIZE * (fieldNum - 35);
+    }
 }

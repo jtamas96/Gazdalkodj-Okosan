@@ -7,6 +7,9 @@ import hu.elte.go.data.enums.Item;
 import java.util.List;
 
 public interface IPersistence {
+
+    void connect(String IPAddress);
+
     void createPlayer(String name);
 
     void requestNewGame(int playerNumber);
