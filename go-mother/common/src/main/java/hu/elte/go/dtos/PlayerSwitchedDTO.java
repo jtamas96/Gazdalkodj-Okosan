@@ -1,9 +1,8 @@
 package hu.elte.go.dtos;
 
 import hu.elte.go.data.Player;
-import hu.elte.go.events.PlayerSwitchedEvent;
 
-public class PlayerSwitchedDTO  implements EventConvertible<PlayerSwitchedEvent> {
+public class PlayerSwitchedDTO {
     private Player player;
 
     public PlayerSwitchedDTO(Player player) {
@@ -18,9 +17,5 @@ public class PlayerSwitchedDTO  implements EventConvertible<PlayerSwitchedEvent>
 
     public void setPlayer(Player player) {
         this.player = player;
-    }
-    @Override
-    public PlayerSwitchedEvent toEvent(Object source) {
-        return new PlayerSwitchedEvent(source, player);
     }
 }

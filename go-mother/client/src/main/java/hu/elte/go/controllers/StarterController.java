@@ -82,13 +82,6 @@ public class StarterController implements Initializable {
         });
     }
 
-    @EventListener
-    public void newGameStarted(NewGameStartedEvent event) {
-        if (event.getSource().equals(clientModel)) {
-            stageManager.switchScene(FxmlView.BOARD);
-        }
-    }
-
     String getStringFromResourceBundle(String key){
         return ResourceBundle.getBundle("Bundle").getString(key);
     }

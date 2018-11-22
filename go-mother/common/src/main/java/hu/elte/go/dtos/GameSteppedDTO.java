@@ -2,11 +2,10 @@ package hu.elte.go.dtos;
 
 import hu.elte.go.data.Field;
 import hu.elte.go.data.Player;
-import hu.elte.go.events.GameSteppedEvent;
 
 import java.util.List;
 
-public class GameSteppedDTO implements EventConvertible<GameSteppedEvent> {
+public class GameSteppedDTO {
 
     private Player currentPlayer;
     private List<Field> table;
@@ -33,10 +32,5 @@ public class GameSteppedDTO implements EventConvertible<GameSteppedEvent> {
 
     public void setTable(List<Field> table) {
         this.table = table;
-    }
-
-    @Override
-    public GameSteppedEvent toEvent(Object source) {
-        return new GameSteppedEvent(source, currentPlayer, table);
     }
 }

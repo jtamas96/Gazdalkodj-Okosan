@@ -1,11 +1,10 @@
 package hu.elte.go.dtos;
 
 import hu.elte.go.data.Player;
-import hu.elte.go.events.BuyEvent;
 
 import java.util.Map;
 
-public class BuyDTO implements EventConvertible<BuyEvent> {
+public class BuyDTO {
     Player player;
     Map<String, Integer> itemPrices;
 
@@ -30,10 +29,5 @@ public class BuyDTO implements EventConvertible<BuyEvent> {
 
     public void setItemPrices(Map<String, Integer> itemPrices) {
         this.itemPrices = itemPrices;
-    }
-
-    @Override
-    public BuyEvent toEvent(Object source) {
-        return new BuyEvent(source, player, itemPrices);
     }
 }

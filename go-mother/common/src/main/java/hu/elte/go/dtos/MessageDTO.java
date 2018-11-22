@@ -2,7 +2,7 @@ package hu.elte.go.dtos;
 
 import hu.elte.go.events.MessageEvent;
 
-public class MessageDTO implements EventConvertible<MessageEvent>{
+public class MessageDTO {
 
     private String message;
     
@@ -19,10 +19,5 @@ public class MessageDTO implements EventConvertible<MessageEvent>{
 
     public void setMessage(String message) {
         this.message = message;
-    }
-
-    @Override
-    public MessageEvent toEvent(Object source) {
-        return new MessageEvent(source, message);
     }
 }

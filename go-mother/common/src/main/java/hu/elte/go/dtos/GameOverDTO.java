@@ -1,9 +1,8 @@
 package hu.elte.go.dtos;
 
 import hu.elte.go.data.Player;
-import hu.elte.go.events.GameOverEvent;
 
-public class GameOverDTO implements EventConvertible<GameOverEvent> {
+public class GameOverDTO  {
 
     private Player[] winners;
 
@@ -19,10 +18,5 @@ public class GameOverDTO implements EventConvertible<GameOverEvent> {
 
     public void setWinners(Player[] winners) {
         this.winners = winners;
-    }
-
-    @Override
-    public GameOverEvent toEvent(Object source) {
-        return new GameOverEvent(source, winners);
     }
 }

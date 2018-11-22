@@ -9,13 +9,22 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import hu.elte.go.events.ErrorEvent;
+import hu.elte.go.events.PlayerCreatedEvent;
 import hu.elte.go.model.ClientModel;
+import hu.elte.go.view.FxmlView;
 import hu.elte.go.view.StageManager;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
+import javafx.scene.control.TextField;
+import javafx.util.Duration;
+import org.controlsfx.control.Notifications;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Controller;
 
 /**
@@ -25,6 +34,9 @@ import org.springframework.stereotype.Controller;
  */
 @Controller
 public class NamePromptController implements Initializable {
+
+    @FXML
+    private TextField userName;
 
     public ClientModel clientModel;
     @Autowired
@@ -45,8 +57,32 @@ public class NamePromptController implements Initializable {
 
     @FXML
     private void OKPressed(ActionEvent event) throws IOException {
-        //TODO: Real functionality
-        clientModel.newGame(3);
+        clientModel.createPlayer(userName.getText());
+    }
+
+    @EventListener
+    public void playerCreated(PlayerCreatedEvent event) {
+        if(event.getSource().equals(clientModel)){
+            Platform.runLater(() -> {
+                stageManager.switchScene(FxmlView.BOARD);
+            });
+        }
+    }
+
+    @EventListener
+    public void errorHandler(ErrorEvent event){
+        Platform.runLater(() -> {
+            Notifications notification = Notifications.create()
+                    .title(getStringFromResourceBundle("window.username.error.title"))
+                    .text(event.message)
+                    .hideAfter(Duration.seconds(3))
+                    .position(Pos.CENTER);
+            notification.showError();
+        });
+    }
+
+    String getStringFromResourceBundle(String key){
+        return ResourceBundle.getBundle("Bundle").getString(key);
     }
     
 }

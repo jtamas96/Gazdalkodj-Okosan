@@ -1,8 +1,6 @@
 package hu.elte.go.dtos;
 
-import hu.elte.go.events.PlayerCreatedEvent;
-
-public class PlayerCreationDTO implements EventConvertible<PlayerCreatedEvent> {
+public class PlayerCreationDTO {
     public String name;
     public String uuid;
 
@@ -19,10 +17,5 @@ public class PlayerCreationDTO implements EventConvertible<PlayerCreatedEvent> {
 
     public void setUuid(String uuid) {
         this.uuid = uuid;
-    }
-
-    @Override
-    public PlayerCreatedEvent toEvent(Object source) {
-        return new PlayerCreatedEvent(source);
     }
 }

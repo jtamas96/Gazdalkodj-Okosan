@@ -4,14 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.elte.go.BoardResponse;
-import hu.elte.go.dtos.EventConvertible;
 import hu.elte.go.dtos.ItemListDTO;
 import hu.elte.go.dtos.NewGameRequestDTO;
 import hu.elte.go.dtos.PlayerCreationDTO;
 import hu.elte.go.events.ConnectToServer;
 import hu.elte.go.events.ErrorEvent;
+import hu.elte.go.events.PlayerCreatedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
@@ -33,6 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,6 +43,8 @@ public class Persistence implements IPersistence {
     private MyStompSessionHandler stompSessionHandler;
     private String clientUuid;
     Logger logger = Logger.getLogger(Persistence.class.getName());
+    private StompSession.Subscription creationSubscription;
+    private String userName;
 
     @Autowired
     public Persistence(ApplicationEventPublisher publisher) {
@@ -64,8 +66,7 @@ public class Persistence implements IPersistence {
     }
 
     public void subscribeToEvents() {
-        subscribeTo("/createPlayerResponse/" + clientUuid,
-                this, new TypeReference<BoardResponse<PlayerCreationDTO>>() {});
+        creationSubscription = subscribeTo("/createPlayerResponse/" + clientUuid, getCreatePlayerCallback());
 //        subscribeTo("/newGameResponse", this, new TypeReference<BoardResponse<NewGameStartedDTO>>() {});
 //        subscribeTo("/gameStepped", this, new TypeReference<BoardResponse<GameSteppedDTO>>() {});
 //        subscribeTo("/switchPlayerResponse", this, new TypeReference<BoardResponse<PlayerSwitchedDTO>>() {});
@@ -92,9 +93,10 @@ public class Persistence implements IPersistence {
 
     @Override
     public void createPlayer(String name) {
-        StompSession stompSession = stompSessionHandler.getSession();
+        this.userName = name;
         String json = "{}";
-        stompSession.send("/app/createPlayer/" + clientUuid + "/" + name, json.getBytes());
+        stompSessionHandler.getSession()
+                .send("/app/createPlayer/" + clientUuid + "/" + name, json.getBytes());
         System.out.println("Sent");
     }
 
@@ -154,10 +156,9 @@ public class Persistence implements IPersistence {
         }
     }
 
-    private <D extends EventConvertible<E>, E extends ApplicationEvent>
-    void subscribeTo(String path, Persistence source, TypeReference responseTypeRef) {
+    private <D> StompSession.Subscription subscribeTo(String path, Consumer<BoardResponse<D>> callback) {
         StompSession stompSession = stompSessionHandler.getSession();
-        stompSession.subscribe(path, new StompFrameHandler() {
+        return stompSession.subscribe(path, new StompFrameHandler() {
 
             @Override
             public Type getPayloadType(StompHeaders stompHeaders) {
@@ -170,18 +171,34 @@ public class Persistence implements IPersistence {
                 BoardResponse<D> response;
                 try {
                     String json = new String((byte[]) o);
-                    response = mapper.readValue(json, responseTypeRef);
-                    if(response.isActionSuccessful()){
-                        D dto = response.getValue();
-                        E event = dto.toEvent(source);
-                        publisher.publishEvent(event);
-                    } else {
-                        publisher.publishEvent(new ErrorEvent(source, response.getErrorMessage()));
-                    }
+                    response = mapper.readValue(json, new TypeReference<BoardResponse<D>>(){});
+                    System.out.println("Handling frame " + response.getClass());
+                    callback.accept(response);
                 } catch (IOException ex) {
                     logger.log(Level.SEVERE, null, ex);
                 }
             }
         });
+    }
+
+    private Consumer<BoardResponse<PlayerCreationDTO>> getCreatePlayerCallback(){
+        return (resp) -> {
+            if(resp.isActionSuccessful()){
+                System.out.println("Player created.");
+                publisher.publishEvent(new PlayerCreatedEvent(this));
+                return;
+            }
+            if (!resp.getErrorMessage().contains("UUID")) {
+                System.out.println("Username already used.");
+                publisher.publishEvent(new ErrorEvent(this, resp.getErrorMessage()));
+                return;
+            }
+
+            //Probably never end up here.
+            creationSubscription.unsubscribe();
+            clientUuid = UUID.randomUUID().toString();
+            creationSubscription = subscribeTo("/createPlayerResponse/" + clientUuid, getCreatePlayerCallback());
+            createPlayer(userName);
+        };
     }
 }

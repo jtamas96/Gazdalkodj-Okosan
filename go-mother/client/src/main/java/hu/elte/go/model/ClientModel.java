@@ -35,10 +35,13 @@ public class ClientModel {
     public void connect(String IPAddress) {
         persistence.connect(IPAddress);
     }
-    
+
+    public void createPlayer(String username){
+        persistence.createPlayer(username);
+    }
+
     public void newGame(int playerNumber) {
         // persistence.requestNewGame(playerNumber);
-        persistence.createPlayer("Proba");
     }
 
     public void stepGame() {
@@ -64,7 +67,7 @@ public class ClientModel {
     @EventListener
     public void playerCreated(PlayerCreatedEvent event) {
         if(event.getSource().equals(persistence)){
-            System.out.println("Player created");
+            publisher.publishEvent(new PlayerCreatedEvent(this));
         }
     }
 
