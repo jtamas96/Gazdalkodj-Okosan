@@ -2,7 +2,6 @@ package hu.elte.go.controller;
 
 import hu.elte.go.BoardResponse;
 import hu.elte.go.data.Player;
-import hu.elte.go.dtos.PlayerCreationDTO;
 import hu.elte.go.model.PlayersModel;
 import java.util.concurrent.ConcurrentMap;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +23,9 @@ public class PlayerController {
 
     @MessageMapping("/createPlayer/{uuid}/{name}")
     @SendTo("/createPlayerResponse/{uuid}")
-    public BoardResponse<PlayerCreationDTO> createPlayer(@DestinationVariable String uuid, @DestinationVariable String name) {
+    public BoardResponse<Void> createPlayer(@DestinationVariable String uuid, @DestinationVariable String name) {
         System.out.println("Player creation request with id: " + uuid + " and name :" + name);
-        BoardResponse<PlayerCreationDTO> response;
+        BoardResponse<Void> response;
         Player p = playersModel.getPlayer(uuid);
         if (p != null) {
             response = new BoardResponse<>("Player UUID already exists.", false, null);
@@ -37,8 +36,7 @@ public class PlayerController {
                 response = new BoardResponse<>("Player name already exists.", false, null);
             } else {
                 playersModel.createPlayer(uuid, name);
-                PlayerCreationDTO dto = new PlayerCreationDTO(name, uuid);
-                response = new BoardResponse<>("", true, dto);
+                response = new BoardResponse<>("", true, null);
             }
         }
         return response;

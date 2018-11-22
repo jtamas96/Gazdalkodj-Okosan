@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.elte.go.BoardResponse;
 import hu.elte.go.dtos.ItemListDTO;
 import hu.elte.go.dtos.NewGameRequestDTO;
-import hu.elte.go.dtos.PlayerCreationDTO;
 import hu.elte.go.events.ConnectToServer;
 import hu.elte.go.events.ErrorEvent;
 import hu.elte.go.events.PlayerCreatedEvent;
@@ -181,7 +180,7 @@ public class Persistence implements IPersistence {
         });
     }
 
-    private Consumer<BoardResponse<PlayerCreationDTO>> getCreatePlayerCallback(){
+    private Consumer<BoardResponse<Void>> getCreatePlayerCallback(){
         return (resp) -> {
             if(resp.isActionSuccessful()){
                 System.out.println("Player created.");
