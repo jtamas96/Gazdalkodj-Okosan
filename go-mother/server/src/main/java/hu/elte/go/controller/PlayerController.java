@@ -24,7 +24,7 @@ public class PlayerController {
     @MessageMapping("/createPlayer/{uuid}/{name}")
     @SendTo("/createPlayerResponse/{uuid}")
     public BoardResponse<Void> createPlayer(@DestinationVariable String uuid, @DestinationVariable String name) {
-        System.out.println("Player creation request with id: " + uuid + " and name :" + name);
+        System.out.println("Player creation request with id: " + uuid + " and name: " + name);
         BoardResponse<Void> response;
         Player p = playersModel.getPlayer(uuid);
         if (p != null) {

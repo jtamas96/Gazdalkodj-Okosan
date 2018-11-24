@@ -35,11 +35,12 @@ public class RoomController {
     @MessageMapping("/rooms")
     @SendTo("/roomsResponse")
     public BoardResponse<RoomListDTO> getRooms() {
+        System.out.println("Room list request.");
         return new BoardResponse<>("", true, roomModel.toRoomListDTO());
     }
 
     @MessageMapping("/createRoom/{ownerUuid}")
-    @SendTo("/createRooResponse/{ownerUuid}")
+    @SendTo("/createRoomResponse/{ownerUuid}")
     public BoardResponse<RoomCreationDTO> createRoom(@DestinationVariable String ownerUuid, String name) {
         Player owner = playersModel.getPlayer(ownerUuid);
         if (owner == null) {
@@ -49,8 +50,8 @@ public class RoomController {
         List<Player> players = Collections.synchronizedList( new ArrayList<>());
         players.add(owner);
         Room newRoom = new Room(roomUuid, name, ownerUuid, players);
-        roomModel.saveRoom(newRoom, null);
-        RoomCreationDTO dto = new RoomCreationDTO(name, ownerUuid, roomUuid);
+        roomModel.createRoom(newRoom);
+        RoomCreationDTO dto = new RoomCreationDTO(name, roomUuid);
         return new BoardResponse<>("", true, dto);
     }
 
@@ -67,7 +68,7 @@ public class RoomController {
                     "Player already joined ro room with uuid " + userRoomUuid,
                     false, null);
         }
-        Optional<Room> optionalRoom = roomModel.getRoom(roomUuid);
+        Optional<Room> optionalRoom = roomModel.getWaitingRoom(roomUuid);
         if (!optionalRoom.isPresent()) {
             return new BoardResponse<>("Room not exist.", false, null);
         }
@@ -83,7 +84,7 @@ public class RoomController {
     @MessageMapping("/deleteRoom/{roomUuid}/{initiatorUuid}")
     @SendTo("/deleteRooResponse/{initiatorUuid}")
     public BoardResponse<RoomDeletionDTO> deleteRoom(@DestinationVariable String roomUuid, @DestinationVariable String initiatorUuid) {
-        Optional<Room> optionalRoom = roomModel.getRoom(roomUuid);
+        Optional<Room> optionalRoom = roomModel.getWaitingRoom(roomUuid);
         if (!optionalRoom.isPresent()) {
             return new BoardResponse<>("Room not exist.", false, null);
         }

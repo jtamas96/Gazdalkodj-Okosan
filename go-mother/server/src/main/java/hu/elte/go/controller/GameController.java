@@ -59,7 +59,7 @@ public class GameController {
     @MessageMapping("/newGame/{roomUuid}/{initiatorUuid}")
     @SendTo("/newGameResponse/{roomUuid}/{initiatorUuid}")
     public BoardResponse<NewGameStartedDTO> initRoom(@DestinationVariable String roomUuid, @DestinationVariable String initiatorUuid) {
-        Optional<Room> optionalRoom = roomModel.getRoom(roomUuid);
+        Optional<Room> optionalRoom = roomModel.getWaitingRoom(roomUuid);
         if (!optionalRoom.isPresent()) {
             return new BoardResponse<>("Room not exist.", false, null);
         }
@@ -72,7 +72,7 @@ public class GameController {
         }
         GameModel game = new GameModel(this.publisher, roomUuid);
         game.newGame(r.getPlayers());
-        roomModel.saveRoom(r, game);
+        roomModel.saveGame(r, game);
 
         List<Player> players = game.getPlayers();
         NewGameStartedDTO response = new NewGameStartedDTO(game.getTable(), players, game.getCurrentPlayer());

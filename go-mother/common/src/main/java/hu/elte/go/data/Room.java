@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class Room {
+public class Room implements Comparable<Room> {
     private String uuid;
     private String name;
     private String ownerUuid;
@@ -54,5 +54,10 @@ public class Room {
         Room o = (Room) obj;
         if (this.uuid == null || o.getUuid() == null) return false;
         return this.uuid.equals(o.getUuid());
+    }
+
+    @Override
+    public int compareTo(Room o) {
+        return uuid.compareTo(o.uuid);
     }
 }
