@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.elte.go.BoardResponse;
 import hu.elte.go.dtos.ItemListDTO;
 import hu.elte.go.dtos.NewGameRequestDTO;
-import hu.elte.go.events.ConnectToServer;
-import hu.elte.go.events.ErrorEvent;
-import hu.elte.go.events.PlayerCreatedEvent;
+import hu.elte.go.dtos.RoomCreationDTO;
+import hu.elte.go.dtos.RoomListDTO;
+import hu.elte.go.events.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
@@ -65,7 +65,10 @@ public class Persistence implements IPersistence {
     }
 
     public void subscribeToEvents() {
-        creationSubscription = subscribeTo("/createPlayerResponse/" + clientUuid, getCreatePlayerCallback());
+        subscribeTo("/roomsResponse",
+                getRoomListCallback(), new TypeReference<BoardResponse<RoomListDTO>>(){});
+        creationSubscription = subscribeTo("/createPlayerResponse/" + clientUuid,
+                getCreatePlayerCallback(), new TypeReference<BoardResponse<Void>>(){});
 //        subscribeTo("/newGameResponse", this, new TypeReference<BoardResponse<NewGameStartedDTO>>() {});
 //        subscribeTo("/gameStepped", this, new TypeReference<BoardResponse<GameSteppedDTO>>() {});
 //        subscribeTo("/switchPlayerResponse", this, new TypeReference<BoardResponse<PlayerSwitchedDTO>>() {});
@@ -74,6 +77,11 @@ public class Persistence implements IPersistence {
 //        subscribeTo("/buyEvents", this, new TypeReference<BoardResponse<BuyDTO>>() {});
 //        subscribeTo("/buyItemsResponse", this, new TypeReference<BoardResponse<PurchasedListDTO>>() {});
 //        subscribeTo("/gameOver", this, new TypeReference<BoardResponse<GameOverDTO>>() {});
+    }
+
+    private void uuidFinalizedSubscribes(){
+        subscribeTo("/createRoomResponse/" + clientUuid,
+                getCreateRoomCallback(), new TypeReference<BoardResponse<RoomCreationDTO>>(){});
     }
 
     private ListenableFuture<StompSession> connectToServer(String IPAddress) {
@@ -141,6 +149,19 @@ public class Persistence implements IPersistence {
         }
     }
 
+    @Override
+    public void getRoomList() {
+        StompSession stompSession = stompSessionHandler.getSession();
+        String body = "{}";
+        stompSession.send("/app/rooms", body.getBytes());
+    }
+
+    @Override
+    public void createRoom(String roomName) {
+        StompSession stompSession = stompSessionHandler.getSession();
+        stompSession.send("/app/createRoom/" + clientUuid, roomName.getBytes());
+    }
+
     private class MyStompSessionHandler extends StompSessionHandlerAdapter {
         private StompSession session;
         public StompSession getSession() {
@@ -155,7 +176,7 @@ public class Persistence implements IPersistence {
         }
     }
 
-    private <D> StompSession.Subscription subscribeTo(String path, Consumer<BoardResponse<D>> callback) {
+    private <D> StompSession.Subscription subscribeTo(String path, Consumer<BoardResponse<D>> callback, TypeReference tr) {
         StompSession stompSession = stompSessionHandler.getSession();
         return stompSession.subscribe(path, new StompFrameHandler() {
 
@@ -170,8 +191,8 @@ public class Persistence implements IPersistence {
                 BoardResponse<D> response;
                 try {
                     String json = new String((byte[]) o);
-                    response = mapper.readValue(json, new TypeReference<BoardResponse<D>>(){});
-                    System.out.println("Handling frame " + response.getClass());
+                    response = mapper.readValue(json, tr);
+                    System.out.println("Handling frame after path: " + path);
                     callback.accept(response);
                 } catch (IOException ex) {
                     logger.log(Level.SEVERE, null, ex);
@@ -185,6 +206,7 @@ public class Persistence implements IPersistence {
             if(resp.isActionSuccessful()){
                 System.out.println("Player created.");
                 publisher.publishEvent(new PlayerCreatedEvent(this));
+                uuidFinalizedSubscribes();
                 return;
             }
             if (!resp.getErrorMessage().contains("UUID")) {
@@ -196,8 +218,30 @@ public class Persistence implements IPersistence {
             //Probably never end up here.
             creationSubscription.unsubscribe();
             clientUuid = UUID.randomUUID().toString();
-            creationSubscription = subscribeTo("/createPlayerResponse/" + clientUuid, getCreatePlayerCallback());
+            creationSubscription = subscribeTo("/createPlayerResponse/" + clientUuid,
+                    getCreatePlayerCallback(), new TypeReference<BoardResponse<Void>>(){});
             createPlayer(userName);
+        };
+    }
+
+    private Consumer<BoardResponse<RoomListDTO>> getRoomListCallback() {
+        return (resp) -> {
+            if (resp.isActionSuccessful()) {
+                publisher.publishEvent(new RoomsRefreshEvent(this, resp.getValue().rooms));
+            } else {
+                publisher.publishEvent(new ErrorEvent(this, resp.getErrorMessage()));
+            }
+        };
+    }
+
+    private Consumer<BoardResponse<RoomCreationDTO>> getCreateRoomCallback() {
+        return (resp) -> {
+            if (resp.isActionSuccessful()) {
+                RoomCreationDTO r = resp.getValue();
+                publisher.publishEvent(new RoomCreatedEvent(this, r.name, r.roomUuid));
+            } else {
+                publisher.publishEvent(new ErrorEvent(this, resp.getErrorMessage()));
+            }
         };
     }
 }

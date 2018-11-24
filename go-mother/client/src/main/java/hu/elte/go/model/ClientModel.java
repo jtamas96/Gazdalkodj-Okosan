@@ -145,4 +145,11 @@ public class ClientModel {
     public boolean isGameOver() {
         return gameOver;
     }
+
+    @EventListener
+    public void errorHandler(ErrorEvent event){
+        if(event.getSource().equals(persistence)){
+            publisher.publishEvent(new ErrorEvent(this, event.message));
+        }
+    }
 }

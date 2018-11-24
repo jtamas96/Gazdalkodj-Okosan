@@ -24,6 +24,26 @@ public enum FxmlView {
         String getFxmlFile() {
             return "/fxml/NamePrompt.fxml";
         }
+    }, ROOMS {
+        @Override
+        String getTitle() {
+            return getStringFromResourceBundle("window.room.list.title");
+        }
+
+        @Override
+        String getFxmlFile() {
+            return "/fxml/Rooms.fxml";
+        }
+    }, ROOMCREATE {
+        @Override
+        String getTitle() {
+            return getStringFromResourceBundle("window.room.create.title");
+        }
+
+        @Override
+        String getFxmlFile() {
+            return "/fxml/RoomInit.fxml";
+        }
     }, BOARD {
         @Override
         String getTitle() {

@@ -1,9 +1,5 @@
 package hu.elte.go.persistence;
 
-import hu.elte.go.BoardResponse;
-import hu.elte.go.data.Player;
-import hu.elte.go.data.enums.Item;
-
 import java.util.List;
 
 public interface IPersistence {
@@ -19,4 +15,8 @@ public interface IPersistence {
     void switchPlayer(int currentPlayerIndex);
 
     void buyItems(List<String> itemsToPurchase);
+
+    void getRoomList();
+
+    void createRoom(String roomName);
 }

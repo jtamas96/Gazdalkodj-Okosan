@@ -5,6 +5,9 @@ import java.util.List;
 public class RoomListDTO {
     public List<RoomDetailsDTO> rooms;
 
+    RoomListDTO(){
+    }
+
     public RoomListDTO(List<RoomDetailsDTO> rooms) {
         this.rooms = rooms;
     }

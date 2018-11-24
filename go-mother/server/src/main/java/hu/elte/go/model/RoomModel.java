@@ -1,19 +1,23 @@
 package hu.elte.go.model;
 
 import hu.elte.go.data.Room;
-import hu.elte.go.dtos.PlayerDTO;
 import hu.elte.go.dtos.RoomDetailsDTO;
-import hu.elte.go.dtos.RoomListDTO;;
+import hu.elte.go.dtos.RoomListDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Collectors;
 
 @Component
 public class RoomModel {
+    private ConcurrentSkipListSet<Room> waitingRooms;
     private ConcurrentMap<Room, GameModel> roomsMapToGameModel;
     private ConcurrentMap<String, String> usersMapToRooms;
 
@@ -21,14 +25,20 @@ public class RoomModel {
     public RoomModel() {
         this.roomsMapToGameModel = new ConcurrentHashMap<>();
         this.usersMapToRooms = new ConcurrentHashMap<>();
+        this.waitingRooms = new ConcurrentSkipListSet<>();
     }
 
-    public void saveRoom(Room room, GameModel game) {
+    public void createRoom(@NonNull Room room) {
+        waitingRooms.add(room);
+    }
+
+    public void saveGame(@NonNull Room room, @NonNull GameModel game){
         roomsMapToGameModel.put(room, game);
+        waitingRooms.remove(room);
     }
 
-    public Optional<Room> getRoom(String uuid){
-        return roomsMapToGameModel.keySet().stream()
+    public Optional<Room> getWaitingRoom(String uuid){
+        return waitingRooms.stream()
                 .filter(r -> r.getUuid().equals(uuid))
                 .findFirst();
     }
@@ -42,9 +52,8 @@ public class RoomModel {
 
     public RoomListDTO toRoomListDTO(){
         RoomListDTO result = new RoomListDTO(new ArrayList<>());
-        roomsMapToGameModel.keySet().forEach((room) -> {
-            GameModel g = roomsMapToGameModel.get(room);
-            List<String> playerNames = g.getPlayers().stream()
+        waitingRooms.forEach((room) -> {
+            List<String> playerNames = room.getPlayers().stream()
                     .map(player -> player.getName())
                     .collect(Collectors.toList());
             result.rooms.add(new RoomDetailsDTO(room.getName(), room.getUuid(), playerNames));
