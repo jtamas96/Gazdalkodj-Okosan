@@ -51,13 +51,14 @@ public class RoomController {
         players.add(owner);
         Room newRoom = new Room(roomUuid, name, ownerUuid, players);
         roomModel.createRoom(newRoom);
+        roomModel.mapUserToRoom(ownerUuid, roomUuid);
         RoomCreationDTO dto = new RoomCreationDTO(name, roomUuid);
         return new BoardResponse<>("", true, dto);
     }
 
     @MessageMapping("/joinRoom/{roomUuid}/{userUuid}")
     @SendTo("/joinRooResponse/{userUuid}")
-    public BoardResponse<RoomDetailsDTO> joinRoom(@DestinationVariable String roomUuid, @DestinationVariable String userUuid) {
+    public BoardResponse<Void> joinRoom(@DestinationVariable String roomUuid, @DestinationVariable String userUuid) {
         Player player = playersModel.getPlayer(userUuid);
         if (player == null) {
             return new BoardResponse<>("Player not exist.", false, null);
@@ -65,7 +66,7 @@ public class RoomController {
         String userRoomUuid = roomModel.getUserRoom(userUuid);
         if(userRoomUuid != null){
             return new BoardResponse<>(
-                    "Player already joined ro room with uuid " + userRoomUuid,
+                    "Player already joined to room with uuid " + userRoomUuid,
                     false, null);
         }
         Optional<Room> optionalRoom = roomModel.getWaitingRoom(roomUuid);
@@ -78,7 +79,7 @@ public class RoomController {
         }
         r.getPlayers().add(player);
         roomModel.mapUserToRoom(userUuid, roomUuid);
-        return new BoardResponse<>("", true, r.roomDTO());
+        return new BoardResponse<>("", true, null);
     }
 
     @MessageMapping("/deleteRoom/{roomUuid}/{initiatorUuid}")

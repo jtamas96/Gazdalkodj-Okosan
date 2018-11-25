@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.elte.go.BoardResponse;
-import hu.elte.go.dtos.ItemListDTO;
-import hu.elte.go.dtos.NewGameRequestDTO;
-import hu.elte.go.dtos.RoomCreationDTO;
-import hu.elte.go.dtos.RoomListDTO;
+import hu.elte.go.dtos.*;
 import hu.elte.go.events.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -82,6 +79,8 @@ public class Persistence implements IPersistence {
     private void uuidFinalizedSubscribes(){
         subscribeTo("/createRoomResponse/" + clientUuid,
                 getCreateRoomCallback(), new TypeReference<BoardResponse<RoomCreationDTO>>(){});
+        subscribeTo("/joinRooResponse/" + clientUuid,
+                getJoinAttemptCallback(), new TypeReference<BoardResponse<RoomDetailsDTO>>(){});
     }
 
     private ListenableFuture<StompSession> connectToServer(String IPAddress) {
@@ -162,6 +161,12 @@ public class Persistence implements IPersistence {
         stompSession.send("/app/createRoom/" + clientUuid, roomName.getBytes());
     }
 
+    @Override
+    public void joinRoom(String roomUuid) {
+        StompSession stompSession = stompSessionHandler.getSession();
+        stompSession.send("/app/joinRoom/" + roomUuid + "/" + clientUuid, "{}".getBytes());
+    }
+
     private class MyStompSessionHandler extends StompSessionHandlerAdapter {
         private StompSession session;
         public StompSession getSession() {
@@ -239,6 +244,16 @@ public class Persistence implements IPersistence {
             if (resp.isActionSuccessful()) {
                 RoomCreationDTO r = resp.getValue();
                 publisher.publishEvent(new RoomCreatedEvent(this, r.name, r.roomUuid));
+            } else {
+                publisher.publishEvent(new ErrorEvent(this, resp.getErrorMessage()));
+            }
+        };
+    }
+
+    private Consumer<BoardResponse<Void>> getJoinAttemptCallback() {
+        return (resp) -> {
+            if (resp.isActionSuccessful()) {
+                publisher.publishEvent(new JoinedToRoomEvent(this));
             } else {
                 publisher.publishEvent(new ErrorEvent(this, resp.getErrorMessage()));
             }

@@ -17,4 +17,8 @@ public class RoomCreatedEvent extends ApplicationEvent {
         this.name = other.name;
         this.uuid = other.uuid;
     }
+
+    public String getUuid() {
+        return uuid;
+    }
 }

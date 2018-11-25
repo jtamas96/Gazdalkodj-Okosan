@@ -19,4 +19,6 @@ public interface IPersistence {
     void getRoomList();
 
     void createRoom(String roomName);
+
+    void joinRoom(String roomUuid);
 }

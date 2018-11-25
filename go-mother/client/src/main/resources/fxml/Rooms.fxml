@@ -15,12 +15,12 @@
             <Insets left="15.0" right="15.0" />
          </VBox.margin>
       </Label>
-      <ListView fx:id="roomList" prefHeight="181.0" prefWidth="254.0">
+      <ListView fx:id="roomList" onMouseClicked="#updatePlayersList" prefHeight="181.0" prefWidth="254.0">
          <VBox.margin>
             <Insets left="15.0" right="15.0" top="5.0" />
          </VBox.margin>
       </ListView>
-      <CheckBox mnemonicParsing="false" text="Csatlakozom">
+      <CheckBox fx:id="joinCheck" onAction="#joinChanged" mnemonicParsing="false" text="Csatlakozom">
          <VBox.margin>
             <Insets left="15.0" right="15.0" top="5.0" />
          </VBox.margin>
@@ -30,7 +30,7 @@
             <Insets left="15.0" right="15.0" top="5.0" />
          </VBox.margin>
       </Label>
-      <ListView prefHeight="73.0" prefWidth="600.0">
+      <ListView fx:id="playersOfRoom" prefHeight="73.0" prefWidth="600.0">
          <VBox.margin>
             <Insets left="15.0" right="15.0" top="5.0" />
          </VBox.margin>
