@@ -41,6 +41,7 @@ public class Persistence implements IPersistence {
     Logger logger = Logger.getLogger(Persistence.class.getName());
     private StompSession.Subscription creationSubscription;
     private String userName;
+    private String roomUuid;
 
     @Autowired
     public Persistence(ApplicationEventPublisher publisher) {
@@ -81,6 +82,11 @@ public class Persistence implements IPersistence {
                 getCreateRoomCallback(), new TypeReference<BoardResponse<RoomCreationDTO>>(){});
         subscribeTo("/joinRooResponse/" + clientUuid,
                 getJoinAttemptCallback(), new TypeReference<BoardResponse<RoomDetailsDTO>>(){});
+    }
+
+    private void roomSubscribes(String roomUid){
+        subscribeTo("/newGameResponse/" + roomUid,
+                getNewGameCallback(), new TypeReference<BoardResponse<NewGameStartedDTO>>(){});
     }
 
     private ListenableFuture<StompSession> connectToServer(String IPAddress) {
@@ -165,6 +171,13 @@ public class Persistence implements IPersistence {
     public void joinRoom(String roomUuid) {
         StompSession stompSession = stompSessionHandler.getSession();
         stompSession.send("/app/joinRoom/" + roomUuid + "/" + clientUuid, "{}".getBytes());
+        this.roomUuid = roomUuid;
+    }
+
+    @Override
+    public void startGame(String roomUuid) {
+        StompSession stompSession = stompSessionHandler.getSession();
+        stompSession.send("/app/newGame/" + roomUuid + "/" + clientUuid, "{}".getBytes());
     }
 
     private class MyStompSessionHandler extends StompSessionHandlerAdapter {
@@ -243,6 +256,7 @@ public class Persistence implements IPersistence {
         return (resp) -> {
             if (resp.isActionSuccessful()) {
                 RoomCreationDTO r = resp.getValue();
+                roomSubscribes(r.roomUuid);
                 publisher.publishEvent(new RoomCreatedEvent(this, r.name, r.roomUuid));
             } else {
                 publisher.publishEvent(new ErrorEvent(this, resp.getErrorMessage()));
@@ -253,7 +267,18 @@ public class Persistence implements IPersistence {
     private Consumer<BoardResponse<Void>> getJoinAttemptCallback() {
         return (resp) -> {
             if (resp.isActionSuccessful()) {
+                roomSubscribes(this.roomUuid);
                 publisher.publishEvent(new JoinedToRoomEvent(this));
+            } else {
+                publisher.publishEvent(new ErrorEvent(this, resp.getErrorMessage()));
+            }
+        };
+    }
+    private Consumer<BoardResponse<NewGameStartedDTO>> getNewGameCallback() {
+        return (resp) -> {
+            if (resp.isActionSuccessful()) {
+                NewGameStartedDTO dto = resp.getValue();
+                publisher.publishEvent(new NewGameStartedEvent(this, dto.getTable(), dto.getPlayers(), dto.getCurrentPlayer()));
             } else {
                 publisher.publishEvent(new ErrorEvent(this, resp.getErrorMessage()));
             }

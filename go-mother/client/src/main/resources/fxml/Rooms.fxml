@@ -45,5 +45,10 @@
             <Insets left="15.0" right="15.0" top="5.0" />
          </VBox.margin>
       </Button>
+      <Button fx:id="startGame" onAction="#startGameFunction" mnemonicParsing="false" text="Játék indítása.">
+         <VBox.margin>
+            <Insets left="15.0" right="15.0" top="5.0" />
+         </VBox.margin>
+      </Button>
    </children>
 </VBox>

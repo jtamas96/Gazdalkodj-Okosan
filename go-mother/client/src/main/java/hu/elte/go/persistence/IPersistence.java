@@ -21,4 +21,6 @@ public interface IPersistence {
     void createRoom(String roomName);
 
     void joinRoom(String roomUuid);
+
+    void startGame(String roomUuid);
 }

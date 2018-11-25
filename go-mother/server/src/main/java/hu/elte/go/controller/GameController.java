@@ -57,8 +57,9 @@ public class GameController {
     }
 
     @MessageMapping("/newGame/{roomUuid}/{initiatorUuid}")
-    @SendTo("/newGameResponse/{roomUuid}/{initiatorUuid}")
+    @SendTo("/newGameResponse/{roomUuid}")
     public BoardResponse<NewGameStartedDTO> initRoom(@DestinationVariable String roomUuid, @DestinationVariable String initiatorUuid) {
+        System.out.println("New game request from " + initiatorUuid + " for room " + roomUuid);
         Optional<Room> optionalRoom = roomModel.getWaitingRoom(roomUuid);
         if (!optionalRoom.isPresent()) {
             return new BoardResponse<>("Room not exist.", false, null);

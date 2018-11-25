@@ -8,6 +8,7 @@ package hu.elte.go.controllers;
 import hu.elte.go.dtos.RoomDetailsDTO;
 import hu.elte.go.events.ErrorEvent;
 import hu.elte.go.events.JoinedToRoomEvent;
+import hu.elte.go.events.NewGameStartedEvent;
 import hu.elte.go.events.RoomsRefreshEvent;
 import hu.elte.go.model.RoomsModel;
 import hu.elte.go.view.FxmlView;
@@ -45,6 +46,8 @@ import java.util.stream.Collectors;
 @Controller
 public class RoomController implements Initializable, ErrorHandlerBase {
 
+    @FXML
+    public Button startGame;
     @FXML
     public CheckBox joinCheck;
     @FXML
@@ -118,6 +121,12 @@ public class RoomController implements Initializable, ErrorHandlerBase {
             });
         }
     }
+    @EventListener
+    public void newGameStarted(NewGameStartedEvent event) {
+        if(event.getSource().equals(roomsModel)){
+            Platform.runLater(() -> stageManager.switchScene(FxmlView.BOARD));
+        }
+    }
 
     public void createRoomPressed(ActionEvent actionEvent){
         stageManager.switchScene(FxmlView.ROOMCREATE);
@@ -161,5 +170,9 @@ public class RoomController implements Initializable, ErrorHandlerBase {
         int index = (int) selected.get(0);
         String roomUid = roomUids.get(index);
         return Optional.of(roomUid);
+    }
+
+    public void startGameFunction(ActionEvent actionEvent) {
+        roomsModel.startGame();
     }
 }
