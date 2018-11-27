@@ -22,8 +22,9 @@ public class Player {
     private Set<Item> insurances;
     private int immobilized;
     private boolean loser;
+    private String uuid;
 
-    public Player(int bankBalance, String name, List<SaleItem> items) {
+    public Player(int bankBalance, String name, List<SaleItem> items, String uuid) {
         this.bankBalance = bankBalance;
         this.debt = 0;
         this.position = 0;
@@ -37,6 +38,7 @@ public class Player {
         immobilized = 0;
         loser = false;
         this.name = name;
+        this.uuid = uuid;
     }
 
     public int getBankBalance() {
@@ -85,6 +87,10 @@ public class Player {
 
     public void setImmobilized(int rounds) {
         immobilized = rounds;
+    }
+    
+    public String getUuid() {
+        return uuid;
     }
 
     public boolean isWithHouse() {

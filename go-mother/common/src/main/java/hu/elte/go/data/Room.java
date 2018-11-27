@@ -3,20 +3,24 @@ package hu.elte.go.data;
 import hu.elte.go.dtos.RoomDetailsDTO;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class Room implements Comparable<Room> {
+
     private String uuid;
     private String name;
     private String ownerUuid;
     private List<Player> players;
+    private boolean isGameStarted;
 
     public Room(String uuid, String name, String ownerUuid, List<Player> players) {
         this.uuid = uuid;
         this.name = name;
         this.ownerUuid = ownerUuid;
         this.players = players;
+        isGameStarted = false;
     }
 
     public String getUuid() {
@@ -42,6 +46,18 @@ public class Room implements Comparable<Room> {
         return new RoomDetailsDTO(name, uuid, playerNames);
     }
 
+    public boolean isGameStarted() {
+        return isGameStarted;
+    }
+
+    public void setIsGameStarted(boolean isGameStarted) {
+        this.isGameStarted = isGameStarted;
+    }
+
+    public void removePlayer(Player player) {
+        players.remove(player);
+    }
+
     @Override
     public int hashCode() {
         return UUID.fromString(uuid).hashCode();
@@ -49,10 +65,16 @@ public class Room implements Comparable<Room> {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) return false;
-        if (!(obj instanceof Room)) return false;
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof Room)) {
+            return false;
+        }
         Room o = (Room) obj;
-        if (this.uuid == null || o.getUuid() == null) return false;
+        if (this.uuid == null || o.getUuid() == null) {
+            return false;
+        }
         return this.uuid.equals(o.getUuid());
     }
 
