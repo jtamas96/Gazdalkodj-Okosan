@@ -10,6 +10,7 @@ import hu.elte.go.events.ErrorEvent;
 import hu.elte.go.events.JoinedToRoomEvent;
 import hu.elte.go.events.NewGameStartedEvent;
 import hu.elte.go.events.RoomsRefreshEvent;
+import hu.elte.go.model.ClientModel;
 import hu.elte.go.model.RoomsModel;
 import hu.elte.go.view.FxmlView;
 import hu.elte.go.view.StageManager;
@@ -58,6 +59,7 @@ public class RoomController implements Initializable, ErrorHandlerBase {
     private Button createRoom;
 
     private RoomsModel roomsModel;
+    private ClientModel clientModel;
 
     @Autowired
     @Lazy
@@ -65,8 +67,9 @@ public class RoomController implements Initializable, ErrorHandlerBase {
     private List<String> roomUids;
 
     @Autowired
-    public RoomController(RoomsModel roomsModel) {
+    public RoomController(RoomsModel roomsModel, ClientModel clientModel) {
         this.roomsModel = roomsModel;
+        this.clientModel = clientModel;
     }
 
     /**
@@ -123,7 +126,7 @@ public class RoomController implements Initializable, ErrorHandlerBase {
     }
     @EventListener
     public void newGameStarted(NewGameStartedEvent event) {
-        if(event.getSource().equals(roomsModel)){
+        if(event.getSource().equals(clientModel)){
             Platform.runLater(() -> stageManager.switchScene(FxmlView.BOARD));
         }
     }

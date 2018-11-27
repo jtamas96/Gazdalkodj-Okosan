@@ -39,6 +39,7 @@ public class GameModel implements CardListener {
     }
 
     public void newGame(List<Player> players) {
+        this.players = Collections.synchronizedList(players);
         for (int i = 0; i < players.size(); i++) {
             players.get(i).setIndex(i);
         }

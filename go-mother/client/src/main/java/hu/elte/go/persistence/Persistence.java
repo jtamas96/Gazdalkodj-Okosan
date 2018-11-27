@@ -54,7 +54,6 @@ public class Persistence implements IPersistence {
     public void connect(String IPAddress) {
         try {
             connectToServer(IPAddress).get();
-            subscribeToEvents();
         } catch (ExecutionException ex) {
             publisher.publishEvent(new ConnectToServer(this, false));
         } catch (InterruptedException ex) {
@@ -190,6 +189,7 @@ public class Persistence implements IPersistence {
         public void afterConnected(StompSession stompSession, StompHeaders stompHeaders) {
             System.out.println("Now connected");
             session = stompSession;
+            subscribeToEvents();
             publisher.publishEvent(new ConnectToServer(this, true));
         }
     }

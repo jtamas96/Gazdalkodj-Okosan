@@ -5,11 +5,9 @@
  */
 package hu.elte.go.controllers;
 
-import hu.elte.go.BoardResponse;
 import hu.elte.go.PlayerColor;
 import hu.elte.go.controllers.consts.PawnPosition;
 import hu.elte.go.data.Player;
-import hu.elte.go.data.enums.Item;
 import hu.elte.go.events.*;
 import hu.elte.go.model.ClientModel;
 import hu.elte.go.view.StageManager;
@@ -27,7 +25,7 @@ import javafx.scene.image.ImageView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
 
 import java.net.URL;
 import java.util.*;
@@ -39,7 +37,7 @@ import java.util.stream.Stream;
  *
  * @author sando
  */
-@Component
+@Controller
 public class GameBoardController implements Initializable {
 
     ClientModel clientModel;

@@ -91,11 +91,4 @@ public class RoomsModel {
             publisher.publishEvent(new JoinedToRoomEvent(this));
         }
     }
-
-    @EventListener
-    public void newGameStarted(NewGameStartedEvent event) {
-        if(event.getSource().equals(persistence)){
-            publisher.publishEvent(new NewGameStartedEvent(this, event));
-        }
-    }
 }
