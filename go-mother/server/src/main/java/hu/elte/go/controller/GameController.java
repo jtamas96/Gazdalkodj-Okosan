@@ -53,6 +53,7 @@ public class GameController {
         GameModel game = optGame.get();
         if (!game.getCurrentPlayer().getUuid().equals(userUuid)) {
             template.convertAndSend("/stepResponse/" + userUuid, new BoardResponse<>("Nem te vagy a soros", false, null));
+            return;
         }
         game.stepGame();
     }
