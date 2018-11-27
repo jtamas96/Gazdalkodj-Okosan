@@ -42,16 +42,19 @@ public class GameController {
     public void stepGame(@DestinationVariable String roomUuid, @DestinationVariable String userUuid) {
         String userRoomUuid = roomModel.getUserRoom(userUuid);
         if (!roomUuid.equals(userRoomUuid)) {
-            //TODO: Response: User not in this room.
+            template.convertAndSend("/stepResponse/" + userUuid, new BoardResponse<>("Hozzáférés megtagadva", false, null));
             return;
         }
         Optional<GameModel> optGame = roomModel.getGame(roomUuid);
         if (!optGame.isPresent()) {
-            // TODO: Response: game not started in this room.
+            template.convertAndSend("/stepResponse/" + userUuid, new BoardResponse<>("A játék még nem indult el a szobában", false, null));
             return;
         }
         GameModel game = optGame.get();
-        game.stepGame(); //Add parameter to this method and check the id.
+        if (!game.getCurrentPlayer().getUuid().equals(userUuid)) {
+            template.convertAndSend("/stepResponse/" + userUuid, new BoardResponse<>("Nem te vagy a soros", false, null));
+        }
+        game.stepGame();
     }
 
     @MessageMapping("/newGame/{roomUuid}/{initiatorUuid}")

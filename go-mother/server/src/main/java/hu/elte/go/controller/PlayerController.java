@@ -5,7 +5,6 @@ import hu.elte.go.data.Player;
 import hu.elte.go.model.PlayersModel;
 import java.util.concurrent.ConcurrentMap;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -22,7 +21,7 @@ public class PlayerController {
         this.playersModel = playersModel;
     }
 
-    @MessageMapping(value="/createPlayer/{uuid}/{name}")
+    @MessageMapping("/createPlayer/{uuid}/{name}")
     @SendTo("/createPlayerResponse/{uuid}")
     public BoardResponse<Void> createPlayer(@DestinationVariable String uuid, @DestinationVariable String name) {
         System.out.println("Player creation request with id: " + uuid + " and name: " + name);
