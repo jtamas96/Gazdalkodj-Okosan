@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class Player {
-    
+
     private String name;
     private int bankBalance;
     private int debt;
@@ -22,9 +22,8 @@ public class Player {
     private Set<Item> insurances;
     private int immobilized;
     private boolean loser;
-    private String uuid;
 
-    public Player(int bankBalance, String name, List<SaleItem> items, String uuid) {
+    public Player(int bankBalance, String name, List<SaleItem> items) {
         this.bankBalance = bankBalance;
         this.debt = 0;
         this.position = 0;
@@ -38,7 +37,6 @@ public class Player {
         immobilized = 0;
         loser = false;
         this.name = name;
-        this.uuid = uuid;
     }
 
     public int getBankBalance() {
@@ -56,7 +54,7 @@ public class Player {
     public void setDebt(int debt) {
         this.debt = debt;
     }
-    
+
     public String getName() {
         return name;
     }
@@ -87,10 +85,6 @@ public class Player {
 
     public void setImmobilized(int rounds) {
         immobilized = rounds;
-    }
-    
-    public String getUuid() {
-        return uuid;
     }
 
     public boolean isWithHouse() {
@@ -127,7 +121,7 @@ public class Player {
         this.loser = loser;
     }
 
-    public Player(){
+    public Player() {
 
     }
 

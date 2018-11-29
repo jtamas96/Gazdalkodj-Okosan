@@ -22,7 +22,7 @@ public class PlayersModel {
     }
 
     public void createPlayer(String playerUuid, String playerName) {
-        Player p = new Player(3000000, playerName, SaleItem.getInitialListForUser(), playerUuid);
+        Player p = new Player(3000000, playerName, SaleItem.getInitialListForUser());
         this.playersMap.put(playerUuid, p);
     }
 
