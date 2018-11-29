@@ -80,7 +80,7 @@ public class Persistence implements IPersistence {
     private void uuidFinalizedSubscribes(){
         subscribeTo("/createRoomResponse/" + clientUuid,
                 getCreateRoomCallback(), new TypeReference<BoardResponse<RoomCreationDTO>>(){});
-        subscribeTo("/joinRooResponse/" + clientUuid,
+        subscribeTo("/joinRoomResponse/" + clientUuid,
                 getJoinAttemptCallback(), new TypeReference<BoardResponse<RoomDetailsDTO>>(){});
     }
 
@@ -219,6 +219,7 @@ public class Persistence implements IPersistence {
                 ObjectMapper mapper = new ObjectMapper();
                 BoardResponse<D> response;
                 try {
+                    System.out.println(o);
                     String json = new String((byte[]) o);
                     response = mapper.readValue(json, tr);
                     System.out.println("Handling frame after path: " + path);
@@ -239,7 +240,7 @@ public class Persistence implements IPersistence {
                 return;
             }
             if (!resp.getErrorMessage().contains("UUID")) {
-                System.out.println("Username already used.");
+                System.out.println(resp.getErrorMessage());
                 publisher.publishEvent(new ErrorEvent(this, resp.getErrorMessage()));
                 return;
             }

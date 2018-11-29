@@ -30,13 +30,11 @@ public class GameController {
     private RoomModel roomModel;
     private PlayersModel playersModel;
     private SimpMessagingTemplate template;
-    private ApplicationEventPublisher publisher;
 
     @Autowired
     public GameController(RoomModel roomModel, PlayersModel playersModel, SimpMessagingTemplate template, ApplicationEventPublisher publisher) {
         this.roomModel = roomModel;
         this.playersModel = playersModel;
-        this.publisher = publisher;
         this.template = template;
     }
 
@@ -45,36 +43,41 @@ public class GameController {
         System.out.println(userUuid + " trying to step in room: " + roomUuid);
         String userRoomUuid = roomModel.getUserRoom(userUuid);
         if (!roomUuid.equals(userRoomUuid)) {
-            //TODO: Response: User not in this room.
+            template.convertAndSend("/stepResponse/" + userUuid, new BoardResponse<>("Hozzáférés megtagadva", false, null));
             return;
         }
         Optional<GameModel> optGame = roomModel.getGame(roomUuid);
         if (!optGame.isPresent()) {
-            // TODO: Response: game not started in this room.
+            template.convertAndSend("/stepResponse/" + userUuid, new BoardResponse<>("A játék még nem indult el a szobában", false, null));
             return;
         }
         GameModel game = optGame.get();
-        game.stepGame(); //Add parameter to this method and check the id.
+        Player initiator = playersModel.getPlayer(userUuid);
+        if (!game.getCurrentPlayer().equals(initiator)) {
+            template.convertAndSend("/stepResponse/" + userUuid, new BoardResponse<>("Nem te vagy a soros", false, null));
+            return;
+        }
+        game.stepGame();
     }
 
     @MessageMapping("/newGame/{roomUuid}/{initiatorUuid}")
     @SendTo("/newGameResponse/{roomUuid}")
-    public BoardResponse<NewGameStartedDTO> initRoom(@DestinationVariable String roomUuid, @DestinationVariable String initiatorUuid) {
+    public BoardResponse<NewGameStartedDTO> startNewGame(@DestinationVariable String roomUuid, @DestinationVariable String initiatorUuid) {
         System.out.println("New game request from " + initiatorUuid + " for room " + roomUuid);
-        Optional<Room> optionalRoom = roomModel.getWaitingRoom(roomUuid);
+        Optional<Room> optionalRoom = roomModel.getRoom(roomUuid);
         if (!optionalRoom.isPresent()) {
-            return new BoardResponse<>("Room not exist.", false, null);
+            return new BoardResponse<>("A szoba nem létezik.", false, null);
         }
         Room r = optionalRoom.get();
         if (!r.getOwnerUuid().equals(initiatorUuid)) {
-            return new BoardResponse<>("Access denied.", false, null);
+            return new BoardResponse<>("Hozzáférés megtagadva.", false, null);
         }
         if (r.getPlayers().size() < 2) {
-            return new BoardResponse<>("Wait for more players.", false, null);
+            return new BoardResponse<>("Túl kevés játékos.", false, null);
         }
-        GameModel game = new GameModel(this.publisher, roomUuid);
+        GameModel game = roomModel.getGame(r.getUuid()).get();
         game.newGame(r.getPlayers());
-        roomModel.saveGame(r, game);
+        r.setIsGameStarted(true);
 
         List<Player> players = game.getPlayers();
         NewGameStartedDTO response = new NewGameStartedDTO(game.getTable(), players, game.getCurrentPlayer());
@@ -87,11 +90,11 @@ public class GameController {
         System.out.println(userUuid + " trying to finish his round in room: " + roomUuid);
         String userRoomUuid = roomModel.getUserRoom(userUuid);
         if (!roomUuid.equals(userRoomUuid)) {
-            return new BoardResponse<>("Access denied for this room!", false, null);
+            return new BoardResponse<>("hozzáférés megtagadva", false, null);
         }
         Optional<GameModel> optGame = roomModel.getGame(roomUuid);
         if (!optGame.isPresent()) {
-            return new BoardResponse<>("Room not exist.", false, null);
+            return new BoardResponse<>("A szoba nem létezik.", false, null);
         }
         GameModel game = optGame.get();
         Player initiator = playersModel.getPlayer(userUuid);
@@ -100,7 +103,7 @@ public class GameController {
             PlayerSwitchedDTO playerDTO = new PlayerSwitchedDTO(game.getCurrentPlayer());
             return new BoardResponse<>("", true, playerDTO);
         } else {
-            return new BoardResponse<>("Not your turn!", false, null);
+            return new BoardResponse<>("Nem te vagy a soros.", false, null);
         }
     }
 
@@ -110,11 +113,11 @@ public class GameController {
             @DestinationVariable String roomUuid, @DestinationVariable String userUuid, ItemListDTO itemsDto) {
         String userRoomUuid = roomModel.getUserRoom(userUuid);
         if (!roomUuid.equals(userRoomUuid)) {
-            return new BoardResponse<>("Access denied for this room!", false, null);
+            return new BoardResponse<>("Hozzáférés megtagadva", false, null);
         }
         Optional<GameModel> optGame = roomModel.getGame(roomUuid);
         if (!optGame.isPresent()) {
-            return new BoardResponse<>("Room not exist.", false, null);
+            return new BoardResponse<>("A szoba nem létezik.", false, null);
         }
         GameModel game = optGame.get();
         try {

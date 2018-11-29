@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class Player {
-    
+
     private String name;
     private int bankBalance;
     private int debt;
@@ -54,7 +54,7 @@ public class Player {
     public void setDebt(int debt) {
         this.debt = debt;
     }
-    
+
     public String getName() {
         return name;
     }
@@ -121,7 +121,7 @@ public class Player {
         this.loser = loser;
     }
 
-    public Player(){
+    public Player() {
 
     }
 

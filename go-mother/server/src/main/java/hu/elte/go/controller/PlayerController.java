@@ -28,12 +28,12 @@ public class PlayerController {
         BoardResponse<Void> response;
         Player p = playersModel.getPlayer(uuid);
         if (p != null) {
-            response = new BoardResponse<>("Player UUID already exists.", false, null);
+            response = new BoardResponse<>("Ez a játékos UUID már létezik.", false, null);
         } else {
             ConcurrentMap<String, Player> playersMap = playersModel.getPlayersMap();
             long playersWithSameName = playersMap.values().stream().filter(player -> player.getName().equals(name)).count();
             if (playersWithSameName != 0) {
-                response = new BoardResponse<>("Player name already exists.", false, null);
+                response = new BoardResponse<>("Ez a név már létezik.", false, null);
             } else {
                 playersModel.createPlayer(uuid, name);
                 response = new BoardResponse<>("", true, null);
