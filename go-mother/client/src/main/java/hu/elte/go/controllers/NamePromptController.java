@@ -8,6 +8,7 @@ package hu.elte.go.controllers;
 import hu.elte.go.events.ErrorEvent;
 import hu.elte.go.events.PlayerCreatedEvent;
 import hu.elte.go.model.ClientModel;
+import hu.elte.go.model.RoomsModel;
 import hu.elte.go.view.FxmlView;
 import hu.elte.go.view.StageManager;
 import javafx.application.Platform;
@@ -35,14 +36,14 @@ public class NamePromptController implements Initializable, ErrorHandlerBase {
     @FXML
     private TextField userName;
 
-    public ClientModel clientModel;
+    public RoomsModel roomsModel;
     @Autowired
     @Lazy
     StageManager stageManager;
 
     @Autowired
-    NamePromptController(ClientModel clientModel){
-        this.clientModel = clientModel;
+    NamePromptController(RoomsModel roomsModel){
+        this.roomsModel = roomsModel;
     }
     /**
      * Initializes the controller class.
@@ -54,12 +55,12 @@ public class NamePromptController implements Initializable, ErrorHandlerBase {
 
     @FXML
     private void OKPressed(ActionEvent event) throws IOException {
-        clientModel.createPlayer(userName.getText());
+        roomsModel.createPlayer(userName.getText());
     }
 
     @EventListener
     public void playerCreated(PlayerCreatedEvent event) {
-        if(event.getSource().equals(clientModel)){
+        if(event.getSource().equals(roomsModel)){
             Platform.runLater(() -> {
                 stageManager.switchScene(FxmlView.ROOMS);
             });
@@ -68,7 +69,7 @@ public class NamePromptController implements Initializable, ErrorHandlerBase {
 
     @EventListener
     public void errorHandler(ErrorEvent event){
-        if(event.getSource().equals(clientModel)){
+        if(event.getSource().equals(roomsModel)){
             Platform.runLater(() -> handleError(event));
         }
     }

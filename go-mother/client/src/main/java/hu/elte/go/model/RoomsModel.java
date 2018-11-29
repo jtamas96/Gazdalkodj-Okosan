@@ -2,7 +2,7 @@ package hu.elte.go.model;
 
 import hu.elte.go.dtos.RoomDetailsDTO;
 import hu.elte.go.events.JoinedToRoomEvent;
-import hu.elte.go.events.NewGameStartedEvent;
+import hu.elte.go.events.PlayerCreatedEvent;
 import hu.elte.go.events.RoomCreatedEvent;
 import hu.elte.go.events.RoomsRefreshEvent;
 import hu.elte.go.persistence.IPersistence;
@@ -35,6 +35,10 @@ public class RoomsModel {
         joinedToRoom = false;
     }
 
+    public void createPlayer(String username){
+        persistence.createPlayer(username);
+    }
+
     public void refreshRooms(){
         persistence.getRoomList();
     }
@@ -65,6 +69,13 @@ public class RoomsModel {
     public void startGame() {
         System.out.println("Starting game in room: " + roomOfPlayer);
         persistence.startGame(roomOfPlayer);
+    }
+
+    @EventListener
+    public void playerCreated(PlayerCreatedEvent event) {
+        if(event.getSource().equals(persistence)){
+            publisher.publishEvent(new PlayerCreatedEvent(this));
+        }
     }
 
     @EventListener

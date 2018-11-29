@@ -47,6 +47,7 @@ public class Persistence implements IPersistence {
     public Persistence(ApplicationEventPublisher publisher) {
         this.publisher = publisher;
         this.clientUuid = UUID.randomUUID().toString();
+        System.out.println("My uuid is:" + clientUuid);
         stompSessionHandler = new MyStompSessionHandler();
     }
 
@@ -86,6 +87,16 @@ public class Persistence implements IPersistence {
     private void roomSubscribes(String roomUid){
         subscribeTo("/newGameResponse/" + roomUid,
                 getNewGameCallback(), new TypeReference<BoardResponse<NewGameStartedDTO>>(){});
+        subscribeTo("/gameStepped/" + roomUid,
+                getStepCallback(), new TypeReference<BoardResponse<GameSteppedDTO>>(){});
+        subscribeTo("/switchPlayerResponse/" + roomUid,
+                getPlayerSwitchedCallback(), new TypeReference<BoardResponse<PlayerSwitchedDTO>>(){});
+        subscribeTo("/buyItemsResponse/" + roomUid + "/" + clientUuid,
+                getPurchasedListCallback(), new TypeReference<BoardResponse<PurchasedListDTO>>(){});
+        subscribeTo("/buyEvents/" + roomUid,
+                getBuyEventCallback(), new TypeReference<BoardResponse<BuyDTO>>(){});
+        subscribeTo("/messages/" + roomUid,
+                getMessageCallback(), new TypeReference<BoardResponse<MessageDTO>>(){});
     }
 
     private ListenableFuture<StompSession> connectToServer(String IPAddress) {
@@ -129,14 +140,14 @@ public class Persistence implements IPersistence {
     public void requestStep() {
         StompSession stompSession = stompSessionHandler.getSession();
         String json = "{}";
-        stompSession.send("/app/step", json.getBytes());
+        stompSession.send("/app/step/" + roomUuid + "/" + clientUuid , json.getBytes());
     }
 
     @Override
     public void switchPlayer(int currentPlayerIndex) {
         StompSession stompSession = stompSessionHandler.getSession();
-        String json = "" + currentPlayerIndex;
-        stompSession.send("/app/switchPlayer", json.getBytes());
+        String json = "{}";
+        stompSession.send("/app/switchPlayer/" + roomUuid + "/" + clientUuid, json.getBytes());
     }
 
     @Override
@@ -147,7 +158,7 @@ public class Persistence implements IPersistence {
         try {
             String json = mapper.writeValueAsString(dto);
             System.out.println(json);
-            stompSession.send("/app/buyItems", json.getBytes());
+            stompSession.send("/app/buyItems/" + roomUuid + "/" + clientUuid, json.getBytes());
         } catch (JsonProcessingException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
@@ -256,6 +267,7 @@ public class Persistence implements IPersistence {
         return (resp) -> {
             if (resp.isActionSuccessful()) {
                 RoomCreationDTO r = resp.getValue();
+                this.roomUuid = r.roomUuid;
                 roomSubscribes(r.roomUuid);
                 publisher.publishEvent(new RoomCreatedEvent(this, r.name, r.roomUuid));
             } else {
@@ -279,6 +291,59 @@ public class Persistence implements IPersistence {
             if (resp.isActionSuccessful()) {
                 NewGameStartedDTO dto = resp.getValue();
                 publisher.publishEvent(new NewGameStartedEvent(this, dto.getTable(), dto.getPlayers(), dto.getCurrentPlayer()));
+            } else {
+                publisher.publishEvent(new ErrorEvent(this, resp.getErrorMessage()));
+            }
+        };
+    }
+    private Consumer<BoardResponse<GameSteppedDTO>> getStepCallback() {
+        return (resp) -> {
+            if (resp.isActionSuccessful()) {
+                GameSteppedDTO dto = resp.getValue();
+                publisher.publishEvent(new GameSteppedEvent(this, dto.getCurrentPlayer(), dto.getTable()));
+            } else {
+                publisher.publishEvent(new ErrorEvent(this, resp.getErrorMessage()));
+            }
+        };
+    }
+
+    private Consumer<BoardResponse<PlayerSwitchedDTO>> getPlayerSwitchedCallback() {
+        return (resp) -> {
+            if (resp.isActionSuccessful()) {
+                PlayerSwitchedDTO dto = resp.getValue();
+                publisher.publishEvent(new PlayerSwitchedEvent(this, dto.getPlayer()));
+            } else {
+                publisher.publishEvent(new ErrorEvent(this, resp.getErrorMessage()));
+            }
+        };
+    }
+    private Consumer<BoardResponse<PurchasedListDTO>> getPurchasedListCallback() {
+        return (resp) -> {
+            if (resp.isActionSuccessful()) {
+                PurchasedListDTO dto = resp.getValue();
+                publisher.publishEvent(new ItemsPurchasedEvent(this, dto.getItemMap()));
+            } else {
+                publisher.publishEvent(new ErrorEvent(this, resp.getErrorMessage()));
+            }
+        };
+    }
+
+    private Consumer<BoardResponse<MessageDTO>> getMessageCallback() {
+        return (resp) -> {
+            if (resp.isActionSuccessful()) {
+                MessageDTO dto = resp.getValue();
+                publisher.publishEvent(new MessageEvent(this, dto.getMessage()));
+            } else {
+                publisher.publishEvent(new ErrorEvent(this, resp.getErrorMessage()));
+            }
+        };
+    }
+
+    private Consumer<BoardResponse<BuyDTO>> getBuyEventCallback() {
+        return (resp) -> {
+            if (resp.isActionSuccessful()) {
+                BuyDTO dto = resp.getValue();
+                publisher.publishEvent(new BuyEvent(this, dto.getPlayer(), dto.getItemPrices()));
             } else {
                 publisher.publishEvent(new ErrorEvent(this, resp.getErrorMessage()));
             }
