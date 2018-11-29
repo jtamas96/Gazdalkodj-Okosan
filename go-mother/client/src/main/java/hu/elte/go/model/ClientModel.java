@@ -36,14 +36,6 @@ public class ClientModel {
         persistence.connect(IPAddress);
     }
 
-    public void createPlayer(String username){
-        persistence.createPlayer(username);
-    }
-
-    public void newGame(int playerNumber) {
-        // persistence.requestNewGame(playerNumber);
-    }
-
     public void stepGame() {
         persistence.requestStep();
     }
@@ -65,13 +57,6 @@ public class ClientModel {
     }
 
     @EventListener
-    public void playerCreated(PlayerCreatedEvent event) {
-        if(event.getSource().equals(persistence)){
-            publisher.publishEvent(new PlayerCreatedEvent(this));
-        }
-    }
-
-    @EventListener
     public void newGameStarted(NewGameStartedEvent event) {
         if(event.getSource().equals(persistence)){
             players = event.getPlayers();
@@ -85,12 +70,13 @@ public class ClientModel {
         if (event.getSource().equals(persistence)) {
             table = event.getTable();
             currentPlayer.setPosition(event.getCurrentPlayer().getPosition());
+            currentPlayer.setItems(event.getCurrentPlayer().getItems());
             publisher.publishEvent(new GameSteppedEvent(this, event));
         }
     }
 
     @EventListener
-    public void playerSwitched(PlayerSwitchedEvent event){
+    public void playerSwitched(PlayerSwitchedEvent event) {
         if (event.getSource().equals(persistence)) {
             currentPlayer = event.getPlayer();
             publisher.publishEvent(new PlayerSwitchedEvent(this, currentPlayer));

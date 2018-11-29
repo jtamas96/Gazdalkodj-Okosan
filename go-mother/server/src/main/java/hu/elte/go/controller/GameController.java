@@ -40,6 +40,7 @@ public class GameController {
 
     @MessageMapping("/step/{roomUuid}/{userUuid}")
     public void stepGame(@DestinationVariable String roomUuid, @DestinationVariable String userUuid) {
+        System.out.println(userUuid + " trying to step in room: " + roomUuid);
         String userRoomUuid = roomModel.getUserRoom(userUuid);
         if (!roomUuid.equals(userRoomUuid)) {
             template.convertAndSend("/stepResponse/" + userUuid, new BoardResponse<>("Hozzáférés megtagadva", false, null));
@@ -84,8 +85,9 @@ public class GameController {
     }
 
     @MessageMapping("/switchPlayer/{roomUuid}/{userUuid}")
-    @SendTo("/switchPlayerResponse/{roomUuid}/{userUuid}")
+    @SendTo("/switchPlayerResponse/{roomUuid}")
     public BoardResponse<PlayerSwitchedDTO> switchPlayer(@DestinationVariable String roomUuid, @DestinationVariable String userUuid) {
+        System.out.println(userUuid + " trying to finish his round in room: " + roomUuid);
         String userRoomUuid = roomModel.getUserRoom(userUuid);
         if (!roomUuid.equals(userRoomUuid)) {
             return new BoardResponse<>("hozzáférés megtagadva", false, null);
