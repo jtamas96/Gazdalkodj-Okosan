@@ -220,7 +220,7 @@ public class Persistence implements IPersistence {
                 BoardResponse<D> response;
                 try {
                     System.out.println(o);
-                    String json = new String((byte[]) o);
+                    String json = new String((byte[]) o, "UTF-8");
                     response = mapper.readValue(json, tr);
                     System.out.println("Handling frame after path: " + path);
                     callback.accept(response);

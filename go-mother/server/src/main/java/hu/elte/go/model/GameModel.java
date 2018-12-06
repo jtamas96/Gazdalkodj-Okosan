@@ -30,7 +30,7 @@ public class GameModel implements CardListener {
     private Player lastStepped;
     private List<FortuneCardEnum> fortuneCardDeck;
     private boolean gameOver;
-    private String roomUuid;
+    private final String roomUuid;
 
     public GameModel(ApplicationEventPublisher publisher, String roomUuid) {
         this.publisher = publisher;
@@ -118,7 +118,7 @@ public class GameModel implements CardListener {
         if (optPlayer.isPresent()) {
             return optPlayer.get();
         } else {
-            throw new PlayerNotFoundException("Player not found with color: " + playerIndex);
+            throw new PlayerNotFoundException("A játékos nem található ezzel az indexszel: " + playerIndex);
         }
     }
 
@@ -471,7 +471,7 @@ public class GameModel implements CardListener {
                 }
             }
         });
-        String notEnoughMoneyForString = "You dont have money for these: " + String.join(
+        String notEnoughMoneyForString = "Nincs elég pénzed ezekre: " + String.join(
                 ",",
                 notEnoughMoneyFor.stream().map(Enum::toString).collect(Collectors.toList()));
         if (!notEnoughMoneyFor.isEmpty()) {
