@@ -75,5 +75,9 @@ public class StageManager {
         LOG.error(errorMsg, exception, exception.getCause());
         Platform.exit();
     }
+    
+    public Scene getScene() {
+        return primaryStage.getScene();
+    }
 
 }

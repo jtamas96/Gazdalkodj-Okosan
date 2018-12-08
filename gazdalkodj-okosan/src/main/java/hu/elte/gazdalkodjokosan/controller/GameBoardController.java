@@ -32,8 +32,14 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javafx.event.ActionEvent;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 
 /**
  * FXML Controller class
@@ -115,8 +121,48 @@ public class GameBoardController implements Initializable {
         System.out.println("Soronlévő játékos: " + clientModel.getCurrentPlayer().getIndex());
         // display info for current player
         displayPlayerInfo(clientModel.getCurrentPlayer());
+        stageManager.getScene().getAccelerators().put(
+            new KeyCodeCombination(KeyCode.K, KeyCombination.CONTROL_ANY),
+            () -> {
+                TextInputDialog dialog = new TextInputDialog("mezőszám..");
+                dialog.setTitle("Tetszőleges mező");
+                dialog.setHeaderText("Cheat");
+                dialog.setContentText("Add meg a kívánt mező sorszámát!");
+                Optional<String> fieldNum = dialog.showAndWait();
+                while (fieldNum.isPresent() && convertToFieldNum(fieldNum.get()) == -1) {
+                    dialog = new TextInputDialog("új mezőszám..");
+                    dialog.setTitle("Tetszőleges mező");
+                    dialog.setHeaderText("Cheat");
+                    dialog.setContentText("Nem megfelelő mezőszám. Add meg a kívánt mező sorszámát!");
+                    fieldNum = dialog.showAndWait();
+                }
+                cheatStep(convertToFieldNum(fieldNum.get()));
+            }
+        );
     }
 
+    /*
+    returns -1 if position is invalid
+    */
+    private int convertToFieldNum(String fieldNum) {
+        int intFieldNum = -1;
+        // validate if convertible to int
+        try {
+            intFieldNum = Integer.parseInt(fieldNum);
+        } catch (Exception e) {
+            return -1;
+        }
+        // validate if valid number
+        if (intFieldNum < 1 || intFieldNum > 42 )
+            return -1;
+        
+        return intFieldNum;
+    }
+    
+    private void cheatStep(int fieldNum) {
+        System.out.println("Cheat: a " + fieldNum + ". számú mezőre lépünk");
+    }
+    
     private void displayPlayerInfo(Player currentPlayer) {
         movePawn(currentPlayer);
         balance.setText(currentPlayer.getBankBalance() + "");
@@ -198,6 +244,11 @@ public class GameBoardController implements Initializable {
         }
     }
 
+    @FXML
+    public void handleCheat(KeyEvent event) {
+        System.out.println("event: " + event.getCode());
+    }
+    
     @FXML
     public void buyItemButton(javafx.event.ActionEvent actionEvent) {
         ObservableList<Map.Entry<String, Integer>> selectedItems = shoppingList.getSelectionModel().getSelectedItems();
