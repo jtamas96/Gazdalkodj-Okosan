@@ -91,7 +91,7 @@ public class Persistence implements IPersistence {
                 getStepCallback(), new TypeReference<BoardResponse<GameSteppedDTO>>(){});
         subscribeTo("/switchPlayerResponse/" + roomUid,
                 getPlayerSwitchedCallback(), new TypeReference<BoardResponse<PlayerSwitchedDTO>>(){});
-        subscribeTo("/buyItemsResponse/" + roomUid + "/" + clientUuid,
+        subscribeTo("/buyItemsResponse/" + roomUid,
                 getPurchasedListCallback(), new TypeReference<BoardResponse<PurchasedListDTO>>(){});
         subscribeTo("/buyEvents/" + roomUid,
                 getBuyEventCallback(), new TypeReference<BoardResponse<BuyDTO>>(){});

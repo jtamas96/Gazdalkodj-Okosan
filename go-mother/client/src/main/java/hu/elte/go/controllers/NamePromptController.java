@@ -36,14 +36,16 @@ public class NamePromptController implements Initializable, ErrorHandlerBase {
     @FXML
     private TextField userName;
 
-    public RoomsModel roomsModel;
+    private RoomsModel roomsModel;
+    private ClientModel clientModel;
     @Autowired
     @Lazy
     StageManager stageManager;
 
     @Autowired
-    NamePromptController(RoomsModel roomsModel){
+    NamePromptController(RoomsModel roomsModel, ClientModel clientModel){
         this.roomsModel = roomsModel;
+        this.clientModel = clientModel;
     }
     /**
      * Initializes the controller class.
@@ -69,7 +71,7 @@ public class NamePromptController implements Initializable, ErrorHandlerBase {
 
     @EventListener
     public void errorHandler(ErrorEvent event){
-        if(event.getSource().equals(roomsModel)){
+        if(event.getSource().equals(clientModel)){
             Platform.runLater(() -> handleError(event));
         }
     }

@@ -120,6 +120,10 @@ public class GameController {
             return new BoardResponse<>("A szoba nem létezik.", false, null);
         }
         GameModel game = optGame.get();
+        Player initiator = playersModel.getPlayer(userUuid);
+        if (game.getCurrentPlayer().getIndex() != initiator.getIndex()) {
+            return new BoardResponse<>("Nem te vagy a soros.", false, null);
+        }
         try {
             List<Item> wishList = itemsDto.getItemList().stream()
                     .map(Item::valueOf)
