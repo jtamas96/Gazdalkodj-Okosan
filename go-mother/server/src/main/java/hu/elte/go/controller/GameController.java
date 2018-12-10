@@ -108,7 +108,7 @@ public class GameController {
     }
 
     @MessageMapping("/buyItems/{roomUuid}/{userUuid}")
-    @SendTo("/buyItemsResponse/{roomUuid}/{userUuid}")
+    @SendTo("/buyItemsResponse/{roomUuid}")
     public BoardResponse<PurchasedListDTO> buyItems(
             @DestinationVariable String roomUuid, @DestinationVariable String userUuid, ItemListDTO itemsDto) {
         String userRoomUuid = roomModel.getUserRoom(userUuid);
