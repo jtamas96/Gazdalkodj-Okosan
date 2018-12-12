@@ -84,6 +84,10 @@ public class GameModel implements CardListener {
     public List<Field> getTable() {
         return table;
     }
+    
+    public List<FortuneCardEnum> getDeck() {
+        return fortuneCardDeck;
+    }
 
     public Player getCurrentPlayer() {
         return currentPlayer;
@@ -91,6 +95,10 @@ public class GameModel implements CardListener {
 
     public String getRoomUuid() {
         return roomUuid;
+    }
+    
+    public Player getLastStepped() {
+        return lastStepped;
     }
 
     public boolean isGameOverForPlayer(Player player) {
